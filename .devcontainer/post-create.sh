@@ -15,6 +15,6 @@ mkdir -p "$SONAR_MCP_DIR/storage"
 curl -fsSL -o "$SONAR_MCP_DIR/sonarqube-mcp-server.jar" \
   "https://binaries.sonarsource.com/Distribution/sonarqube-mcp-server/sonarqube-mcp-server-${SONAR_MCP_VERSION}.jar"
 
-if [ -f package.json ]; then
-  npm install
+if [ -f Domusmea/package.json ]; then
+  npm install --prefix Domusmea
 fi

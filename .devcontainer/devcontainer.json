@@ -37,10 +37,10 @@
   // Installs Angular CLI, SonarScanner CLI and the SonarQube MCP server.
   "postCreateCommand": "bash .devcontainer/post-create.sh",
 
-  "forwardPorts": [4200, 3000],
+  "forwardPorts": [4200, 4000],
   "portsAttributes": {
     "4200": { "label": "Angular dev server", "onAutoForward": "notify" },
-    "3000": { "label": "Node.js API", "onAutoForward": "notify" }
+    "4000": { "label": "SSR / API server (built)", "onAutoForward": "notify" }
   },
 
   "customizations": {
@@ -56,7 +56,7 @@
       "settings": {
         "editor.formatOnSave": true,
         "editor.defaultFormatter": "esbenp.prettier-vscode",
-        "typescript.tsdk": "node_modules/typescript/lib",
+        "typescript.tsdk": "Domusmea/node_modules/typescript/lib",
         "files.watcherExclude": {
           "**/node_modules/**": true,
           "**/.angular/**": true,

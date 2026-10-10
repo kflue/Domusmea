@@ -17,7 +17,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "f=$(jq -r '.tool_input.file_path'); case \"$f\" in *.ts|*.html|*.scss|*.css|*.json|*.md) [ -x \"$CLAUDE_PROJECT_DIR/node_modules/.bin/prettier\" ] && \"$CLAUDE_PROJECT_DIR/node_modules/.bin/prettier\" --write --ignore-unknown \"$f\" >/dev/null 2>&1;; esac; exit 0"
+            "command": "f=$(jq -r '.tool_input.file_path'); case \"$f\" in *.ts|*.html|*.scss|*.css|*.json|*.md) d=$(dirname \"$f\"); while [ \"$d\" != / ] && [ ! -x \"$d/node_modules/.bin/prettier\" ]; do d=$(dirname \"$d\"); done; [ -x \"$d/node_modules/.bin/prettier\" ] && \"$d/node_modules/.bin/prettier\" --write --ignore-unknown \"$f\" >/dev/null 2>&1;; esac; exit 0"
           }
         ]
       }
