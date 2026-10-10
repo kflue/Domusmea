@@ -1,0 +1,22 @@
+{
+  "mcpServers": {
+    "sonarqube": {
+      "command": "java",
+      "args": ["-jar", "/home/node/.local/share/sonarqube-mcp/sonarqube-mcp-server.jar"],
+      "env": {
+        "STORAGE_PATH": "/home/node/.local/share/sonarqube-mcp/storage",
+        "SONARQUBE_TOKEN": "${SONAR_TOKEN}",
+        "SONARQUBE_ORG": "${SONAR_ORG:-kflue}",
+        "SONARQUBE_IDE_PORT": "${SONARQUBE_IDE_PORT:-64120}"
+      }
+    },
+    "angular-cli": {
+      "command": "ng",
+      "args": ["mcp"]
+    },
+    "playwright": {
+      "command": "npx",
+      "args": ["-y", "@playwright/mcp@0.0.82", "--headless", "--isolated"]
+    }
+  }
+}

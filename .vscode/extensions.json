@@ -1,0 +1,11 @@
+{
+    "recommendations": [
+        "github.codespaces",
+        "anthropic.claude-code",
+        "sonarsource.sonarlint-vscode",
+        "angular.ng-template",
+        "dbaeumer.vscode-eslint",
+        "esbenp.prettier-vscode",
+        "editorconfig.editorconfig"
+    ]
+}

@@ -1,0 +1,26 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "jq -r '.tool_input.command' | grep -qE '(^|[;&|(] *)(npx +)?sonar( |$)' && { echo 'SonarCloud automatic analysis is enabled; manual sonar scans are rejected. Use the sonarqube MCP tools instead.' >&2; exit 2; } || exit 0"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "f=$(jq -r '.tool_input.file_path'); case \"$f\" in *.ts|*.html|*.scss|*.css|*.json|*.md) [ -x \"$CLAUDE_PROJECT_DIR/node_modules/.bin/prettier\" ] && \"$CLAUDE_PROJECT_DIR/node_modules/.bin/prettier\" --write --ignore-unknown \"$f\" >/dev/null 2>&1;; esac; exit 0"
+          }
+        ]
+      }
+    ]
+  }
+}

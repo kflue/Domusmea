@@ -1,0 +1,68 @@
+{
+  // Dev container for Domusmea: Angular frontend + Node.js backend, developed with Claude Code.
+  // Sized for the GitHub Codespaces free tier (120 core-hours / 15 GB storage per month):
+  // a 2-core machine stretches the core-hours to ~60 h of runtime per month.
+  "name": "Domusmea (Angular + Node.js + Claude Code)",
+
+  // Lean Node.js/TypeScript image instead of the multi-language "universal" image.
+  "image": "mcr.microsoft.com/devcontainers/typescript-node:24-bookworm",
+
+  "hostRequirements": {
+    "cpus": 2,
+    "memory": "8gb",
+    "storage": "32gb"
+  },
+
+  "features": {
+    "ghcr.io/devcontainers/features/github-cli:1": {},
+    "ghcr.io/anthropics/devcontainer-features/claude-code:1": {},
+    // Java 21 for the SonarQube MCP server used by Claude Code.
+    "ghcr.io/devcontainers/features/java:1": { "version": "21", "jdkDistro": "ms" }
+  },
+
+  // Keep Claude Code's login and settings across container rebuilds.
+  "mounts": [
+    "source=claude-code-config-${devcontainerId},target=/home/node/.claude,type=volume"
+  ],
+  "containerEnv": {
+    "CLAUDE_CONFIG_DIR": "/home/node/.claude",
+    // SonarQube Cloud organization; SONAR_TOKEN comes from a Codespaces secret.
+    "SONAR_ORG": "kflue",
+    // Angular CLI: skip the analytics prompt.
+    "NG_CLI_ANALYTICS": "false"
+  },
+
+  "remoteUser": "node",
+
+  // Installs Angular CLI, SonarScanner CLI and the SonarQube MCP server.
+  "postCreateCommand": "bash .devcontainer/post-create.sh",
+
+  "forwardPorts": [4200, 3000],
+  "portsAttributes": {
+    "4200": { "label": "Angular dev server", "onAutoForward": "notify" },
+    "3000": { "label": "Node.js API", "onAutoForward": "notify" }
+  },
+
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "anthropic.claude-code",
+        "sonarsource.sonarlint-vscode",
+        "angular.ng-template",
+        "dbaeumer.vscode-eslint",
+        "esbenp.prettier-vscode",
+        "editorconfig.editorconfig"
+      ],
+      "settings": {
+        "editor.formatOnSave": true,
+        "editor.defaultFormatter": "esbenp.prettier-vscode",
+        "typescript.tsdk": "node_modules/typescript/lib",
+        "files.watcherExclude": {
+          "**/node_modules/**": true,
+          "**/.angular/**": true,
+          "**/dist/**": true
+        }
+      }
+    }
+  }
+}
