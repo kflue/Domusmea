@@ -10,7 +10,8 @@ import {
 } from '../../../shared/item';
 import { FieldErrors } from '../../shared/field-errors';
 import { ItemsApi } from '../items-api';
-import { EMPTY_ITEM_FORM, parseChf, toFormModel, toItemInput } from './item-form-model';
+import { parseChf } from '../../shared/chf-input';
+import { EMPTY_ITEM_FORM, toFormModel, toItemInput } from './item-form-model';
 
 const TEXT_FIELDS = ['name', 'manufacturer', 'model', 'serialNumber', 'seller'] as const;
 

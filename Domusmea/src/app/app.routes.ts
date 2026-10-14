@@ -1,10 +1,28 @@
 import { Routes } from '@angular/router';
+import { setupGuard, signedInGuard, signedOutGuard } from './auth/auth-guards';
 
 export const routes: Routes = [
   { path: '', pathMatch: 'full', redirectTo: 'items' },
-  { path: 'items', loadChildren: () => import('./items/items.routes').then((m) => m.itemRoutes) },
+  {
+    path: 'login',
+    title: 'Sign in · Domusmea',
+    canActivate: [signedOutGuard],
+    loadComponent: () => import('./auth/login/login').then((m) => m.LoginPage),
+  },
+  {
+    path: 'setup',
+    title: 'Choose your sign-in · Domusmea',
+    canActivate: [setupGuard],
+    loadComponent: () => import('./auth/setup/setup').then((m) => m.SetupPage),
+  },
+  {
+    path: 'items',
+    canActivate: [signedInGuard],
+    loadChildren: () => import('./items/items.routes').then((m) => m.itemRoutes),
+  },
   {
     path: 'settings',
+    canActivate: [signedInGuard],
     loadChildren: () => import('./settings/settings.routes').then((m) => m.settingsRoutes),
   },
   { path: '**', redirectTo: 'items' },

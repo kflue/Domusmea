@@ -1,0 +1,46 @@
+<section class="mx-auto max-w-sm">
+  <h1 class="mb-6 text-2xl font-semibold">Sign in</h1>
+
+  <form novalidate (submit)="signIn($event)" class="grid gap-5">
+    <div>
+      <label for="username" class="block font-medium">Username</label>
+      <input
+        id="username"
+        class="field"
+        autocomplete="username"
+        autocapitalize="none"
+        spellcheck="false"
+        aria-describedby="username-errors"
+        [attr.aria-invalid]="loginForm.username().touched() && loginForm.username().invalid()"
+        [formField]="loginForm.username"
+      />
+      <app-field-errors errorId="username-errors" [field]="loginForm.username()" />
+    </div>
+
+    <div>
+      <label for="password" class="block font-medium">Password</label>
+      <input
+        id="password"
+        type="password"
+        class="field"
+        autocomplete="current-password"
+        aria-describedby="password-errors"
+        [attr.aria-invalid]="loginForm.password().touched() && loginForm.password().invalid()"
+        [formField]="loginForm.password"
+      />
+      <app-field-errors errorId="password-errors" [field]="loginForm.password()" />
+    </div>
+
+    @if (error()) {
+      <p role="alert" class="rounded border border-red-300 bg-red-50 p-3 text-red-800">
+        {{ error() }}
+      </p>
+    }
+
+    <div>
+      <button type="submit" class="btn-primary" [disabled]="loginForm().submitting()">
+        {{ loginForm().submitting() ? 'Signing in…' : 'Sign in' }}
+      </button>
+    </div>
+  </form>
+</section>

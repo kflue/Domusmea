@@ -6,14 +6,17 @@ import {
 } from '@angular/ssr/node';
 import express from 'express';
 import { join } from 'node:path';
+import { createApiRouter } from './server/api-router';
 import {
+  allowRemoteSetup,
+  authRepository,
+  secureCookies,
   clock,
   emailSettingsRepository,
   itemRepository,
+  journalRepository,
   startBackgroundJobs,
 } from './server/app-services';
-import { createEmailSettingsRouter } from './server/email/email-settings-router';
-import { createItemsRouter } from './server/items/items-router';
 import {
   allowedHostMatcher,
   rejectCrossSiteWrites,
@@ -39,16 +42,24 @@ app.use((_req, _res, next) => {
 });
 
 /**
- * REST API (docs/architecture/README.md). There is no login yet, so only allowed host names and
- * same-origin writes are accepted. Unknown `/api` paths get a JSON 404 instead of the Angular app.
+ * REST API (docs/architecture/README.md): only allowed host names and same-origin writes are
+ * accepted (ADR 0005), and everything except `/api/auth` requires a session (ADR 0007).
  */
 const isAllowedHost = allowedHostMatcher();
-app.use('/api', requireAllowedHost(isAllowedHost), rejectCrossSiteWrites(isAllowedHost));
-app.use('/api/items', createItemsRouter(itemRepository, clock.today));
-app.use('/api/settings/email', createEmailSettingsRouter(emailSettingsRepository));
-app.use('/api', (_req, res) => {
-  res.status(404).json({ error: 'not-found' });
-});
+app.use(
+  '/api',
+  requireAllowedHost(isAllowedHost),
+  rejectCrossSiteWrites(isAllowedHost),
+  createApiRouter({
+    auth: authRepository,
+    items: itemRepository,
+    journal: journalRepository,
+    emailSettings: emailSettingsRepository,
+    today: clock.today,
+    allowRemoteSetup,
+    secureCookies,
+  }),
+);
 
 /**
  * Serve static files from /browser
@@ -75,9 +86,13 @@ app.use((req, res, next) => {
  * Start the server if this module is the main entry point, or it is ran via PM2.
  * The server listens on the port defined by the `PORT` environment variable, or defaults to 4000.
  */
-if (isMainModule(import.meta.url) || process.env['pm_id']) {
+if (process.argv.includes('--reset-login') && isMainModule(import.meta.url)) {
+  // Forgotten password (ADR 0007): back to admin / admin and the first-run setup.
+  authRepository().resetToDefault();
+  console.log('Login reset. Sign in with admin / admin and choose new credentials.');
+} else if (isMainModule(import.meta.url) || process.env['pm_id']) {
   const port = Number(process.env['PORT'] || 4000);
-  // Local only by default: without a login, anyone who can reach the server can change all data.
+  // Local only by default (ADR 0005); set HOST to reach the app from other devices (ADR 0007).
   const host = process.env['HOST'] || '127.0.0.1';
   app.listen(port, host, (error) => {
     if (error) {

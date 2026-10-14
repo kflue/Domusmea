@@ -1,0 +1,155 @@
+<section aria-labelledby="account-heading" class="grid gap-8">
+  <h2 id="account-heading" class="text-lg font-medium text-gray-700">Sign-in and security</h2>
+
+  @if (account.error()) {
+    <p role="alert" class="rounded border border-red-300 bg-red-50 p-3 text-red-800">
+      The account could not be loaded. Please reload the page.
+    </p>
+  } @else if (!account.hasValue()) {
+    <p aria-live="polite">Loading…</p>
+  } @else {
+    <div>
+      <h3 class="mb-1 font-semibold">Recent sign-ins</h3>
+      <p class="mb-3 text-sm text-gray-600">
+        Signed in as <span class="font-medium">{{ account.value().username }}</span
+        >. The newest sign-in is usually this one. If you do not recognize one, change your
+        password.
+      </p>
+      @if (signIns().length) {
+        <table class="w-full text-left text-sm">
+          <thead>
+            <tr class="border-b border-gray-300">
+              <th scope="col" class="py-2 pr-4 font-medium">Time</th>
+              <th scope="col" class="py-2 font-medium">Address</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (signIn of signIns(); track $index) {
+              <tr class="border-b border-gray-200">
+                <td class="py-2 pr-4 whitespace-nowrap">{{ signIn.when }}</td>
+                <td class="py-2 break-all">{{ signIn.where }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      } @else {
+        <p class="text-sm text-gray-600">No sign-ins recorded yet.</p>
+      }
+    </div>
+
+    <form novalidate (submit)="changePassword($event)" class="grid gap-5">
+      <h3 class="font-semibold">Change password</h3>
+      <!-- Lets password managers store the new password for the right account; not displayed. -->
+      <div class="hidden">
+        <label for="account-username">Username</label>
+        <input
+          id="account-username"
+          type="text"
+          autocomplete="username"
+          readonly
+          [value]="account.value().username"
+        />
+      </div>
+      <div>
+        <label for="current-password" class="block font-medium">Current password</label>
+        <input
+          id="current-password"
+          type="password"
+          class="field"
+          autocomplete="current-password"
+          aria-describedby="current-password-errors"
+          [attr.aria-invalid]="
+            passwordForm.currentPassword().touched() && passwordForm.currentPassword().invalid()
+          "
+          [formField]="passwordForm.currentPassword"
+        />
+        <app-field-errors
+          errorId="current-password-errors"
+          [field]="passwordForm.currentPassword()"
+        />
+      </div>
+      <div class="grid gap-5 sm:grid-cols-2">
+        <div>
+          <label for="new-password" class="block font-medium">New password</label>
+          <input
+            id="new-password"
+            type="password"
+            class="field"
+            autocomplete="new-password"
+            aria-describedby="new-password-hint new-password-errors"
+            [attr.aria-invalid]="
+              passwordForm.newPassword().touched() && passwordForm.newPassword().invalid()
+            "
+            [formField]="passwordForm.newPassword"
+          />
+          <p id="new-password-hint" class="mt-1 text-sm text-gray-600">
+            At least {{ minPasswordLength }} characters.
+          </p>
+          <app-field-errors errorId="new-password-errors" [field]="passwordForm.newPassword()" />
+        </div>
+        <div>
+          <label for="password-confirmation" class="block font-medium">Repeat new password</label>
+          <input
+            id="password-confirmation"
+            type="password"
+            class="field"
+            autocomplete="new-password"
+            aria-describedby="password-confirmation-errors"
+            [attr.aria-invalid]="
+              passwordForm.confirmation().touched() && passwordForm.confirmation().invalid()
+            "
+            [formField]="passwordForm.confirmation"
+          />
+          <app-field-errors
+            errorId="password-confirmation-errors"
+            [field]="passwordForm.confirmation()"
+          />
+        </div>
+      </div>
+
+      @if (passwordError()) {
+        <p role="alert" class="rounded border border-red-300 bg-red-50 p-3 text-red-800">
+          {{ passwordError() }}
+        </p>
+      }
+      <p role="status" class="text-green-800 empty:hidden">{{ passwordStatus() }}</p>
+
+      <div>
+        <button type="submit" class="btn-primary" [disabled]="passwordForm().submitting()">
+          Change password
+        </button>
+      </div>
+    </form>
+
+    <div>
+      <h3 class="mb-1 font-semibold">Sign out on all devices</h3>
+      <p class="mb-3 text-sm text-gray-600">
+        Ends every session, including this one, for example after losing a phone.
+      </p>
+      @if (signOutError()) {
+        <p role="alert" class="mb-3 rounded border border-red-300 bg-red-50 p-3 text-red-800">
+          {{ signOutError() }}
+        </p>
+      }
+      @if (confirmingSignOut()) {
+        <div class="flex flex-wrap items-center gap-3" role="group" aria-label="Confirm sign out">
+          <span>Sign out everywhere, here too?</span>
+          <button
+            id="sign-out-confirm"
+            type="button"
+            class="btn-danger"
+            [disabled]="signingOut()"
+            (click)="signOutEverywhere()"
+          >
+            Sign out everywhere
+          </button>
+          <button type="button" class="btn-secondary" (click)="cancelSignOut()">Cancel</button>
+        </div>
+      } @else {
+        <button id="sign-out-start" type="button" class="btn-secondary" (click)="askToSignOut()">
+          Sign out on all devices…
+        </button>
+      }
+    </div>
+  }
+</section>

@@ -1,10 +1,12 @@
 import { DatabaseSync } from 'node:sqlite';
 import { DEFAULT_TIME_ZONE, todayIn } from '../shared/format';
+import { AuthRepository } from './auth/auth-repository';
 import { DEFAULT_DB_PATH, openDatabase } from './db';
 import { EmailSettingsRepository } from './email/email-settings-repository';
 import { createMailer } from './email/mailer';
 import { secretBoxFromEnv } from './email/secret-box';
 import { Clock, ItemRepository } from './items/item-repository';
+import { JournalRepository } from './journal/journal-repository';
 import { startWarrantyNotifier } from './warranty/warranty-notifier';
 
 /**
@@ -18,8 +20,16 @@ export const clock: Clock = {
   today: () => todayIn(timeZone),
 };
 
+/** `ALLOW_REMOTE_SETUP=true` accepts the first-run setup from other machines (ADR 0007). */
+export const allowRemoteSetup = process.env['ALLOW_REMOTE_SETUP'] === 'true';
+
+/** `SECURE_COOKIES=true` always marks the session cookie `Secure`, for TLS proxies (ADR 0007). */
+export const secureCookies = process.env['SECURE_COOKIES'] === 'true';
+
 let database: DatabaseSync | undefined;
+let auth: AuthRepository | undefined;
 let items: ItemRepository | undefined;
+let journal: JournalRepository | undefined;
 let emailSettings: EmailSettingsRepository | undefined;
 
 function db(): DatabaseSync {
@@ -27,9 +37,19 @@ function db(): DatabaseSync {
   return database;
 }
 
+export function authRepository(): AuthRepository {
+  auth ??= new AuthRepository(db(), clock.now);
+  return auth;
+}
+
 export function itemRepository(): ItemRepository {
   items ??= new ItemRepository(db(), clock);
   return items;
+}
+
+export function journalRepository(): JournalRepository {
+  journal ??= new JournalRepository(db(), clock.now);
+  return journal;
 }
 
 export function emailSettingsRepository(): EmailSettingsRepository {
