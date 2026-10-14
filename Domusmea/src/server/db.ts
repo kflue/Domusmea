@@ -75,6 +75,25 @@ const MIGRATIONS: readonly string[] = [
      forwarded_for TEXT
    );
    CREATE INDEX sign_ins_user ON sign_ins (user_id, id);`,
+  // Journal of repairs and investments; roles that may see or edit items get the same on the journal.
+  `CREATE TABLE journal_entries (
+     id INTEGER PRIMARY KEY,
+     date TEXT NOT NULL,
+     kind TEXT NOT NULL CHECK (kind IN ('repair', 'investment')),
+     title TEXT NOT NULL,
+     cost_rappen INTEGER CHECK (cost_rappen >= 0),
+     contractor TEXT,
+     notes TEXT,
+     item_id INTEGER REFERENCES items (id) ON DELETE SET NULL,
+     created_at TEXT NOT NULL,
+     updated_at TEXT NOT NULL
+   );
+   CREATE INDEX journal_entries_date ON journal_entries (date);
+   CREATE INDEX journal_entries_item ON journal_entries (item_id);
+   INSERT INTO role_permissions (role_id, permission)
+     SELECT role_id, 'journal:read' FROM role_permissions WHERE permission = 'items:read';
+   INSERT INTO role_permissions (role_id, permission)
+     SELECT role_id, 'journal:write' FROM role_permissions WHERE permission = 'items:write';`,
 ];
 
 export const DEFAULT_DB_PATH = 'data/domusmea.db';

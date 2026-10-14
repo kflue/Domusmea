@@ -1,5 +1,6 @@
 import express, { Router } from 'express';
 import { jsonErrors, validationError } from '../api-errors';
+import { withId } from '../route-params';
 import { itemInputSchema } from './item-input';
 import { ItemList } from '../../shared/item';
 import { ItemRepository } from './item-repository';
@@ -56,10 +57,4 @@ export function createItemsRouter(repository: () => ItemRepository, today: () =>
 
   router.use(jsonErrors);
   return router;
-}
-
-/** Calls `fn` with the numeric id, or returns `undefined` for ids that cannot exist. */
-function withId<T>(param: string, fn: (id: number) => T): T | undefined {
-  const id = Number(param);
-  return Number.isSafeInteger(id) && id > 0 ? fn(id) : undefined;
 }

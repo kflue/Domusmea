@@ -14,6 +14,7 @@ import {
   clock,
   emailSettingsRepository,
   itemRepository,
+  journalRepository,
   startBackgroundJobs,
 } from './server/app-services';
 import {
@@ -52,6 +53,7 @@ app.use(
   createApiRouter({
     auth: authRepository,
     items: itemRepository,
+    journal: journalRepository,
     emailSettings: emailSettingsRepository,
     today: clock.today,
     allowRemoteSetup,

@@ -1,6 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { DEFAULT_PASSWORD_HASH } from './auth-repository';
-import { hashPassword, verifyPassword } from './passwords';
+import { hashPassword, hashPasswordSync, verifyPassword } from './passwords';
 
 describe('passwords', () => {
   it('verifies a hashed password and rejects others', async () => {
@@ -20,7 +19,10 @@ describe('passwords', () => {
     }
   });
 
-  it('ships the hash of the default password', async () => {
-    expect(await verifyPassword('admin', DEFAULT_PASSWORD_HASH)).toBe(true);
+  it('hashes synchronously in the same format', async () => {
+    const hash = hashPasswordSync('admin');
+    expect(hash).toMatch(/^scrypt\$32768\$8\$1\$/);
+    expect(await verifyPassword('admin', hash)).toBe(true);
+    expect(hash).not.toBe(hashPasswordSync('admin'));
   });
 });

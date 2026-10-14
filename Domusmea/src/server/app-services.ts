@@ -6,6 +6,7 @@ import { EmailSettingsRepository } from './email/email-settings-repository';
 import { createMailer } from './email/mailer';
 import { secretBoxFromEnv } from './email/secret-box';
 import { Clock, ItemRepository } from './items/item-repository';
+import { JournalRepository } from './journal/journal-repository';
 import { startWarrantyNotifier } from './warranty/warranty-notifier';
 
 /**
@@ -28,6 +29,7 @@ export const secureCookies = process.env['SECURE_COOKIES'] === 'true';
 let database: DatabaseSync | undefined;
 let auth: AuthRepository | undefined;
 let items: ItemRepository | undefined;
+let journal: JournalRepository | undefined;
 let emailSettings: EmailSettingsRepository | undefined;
 
 function db(): DatabaseSync {
@@ -43,6 +45,11 @@ export function authRepository(): AuthRepository {
 export function itemRepository(): ItemRepository {
   items ??= new ItemRepository(db(), clock);
   return items;
+}
+
+export function journalRepository(): JournalRepository {
+  journal ??= new JournalRepository(db(), clock.now);
+  return journal;
 }
 
 export function emailSettingsRepository(): EmailSettingsRepository {

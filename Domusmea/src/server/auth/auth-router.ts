@@ -11,7 +11,7 @@ import {
   toSessionUser,
 } from './access-control';
 import { loginInputSchema, setupInputSchema } from './auth-input';
-import { AuthRepository, DEFAULT_PASSWORD_HASH } from './auth-repository';
+import { AuthRepository } from './auth-repository';
 import { addressKey, LoginThrottle } from './login-throttle';
 import { hashPassword, verifyPassword } from './passwords';
 
@@ -64,7 +64,10 @@ export function createAuthRouter(
     throttle.recordFailure(keys);
     const found = repository().credentials(username);
     // Unknown usernames are checked against a hash too, so they take as long as wrong passwords.
-    const valid = await verifyPassword(password, found?.passwordHash ?? DEFAULT_PASSWORD_HASH);
+    const valid = await verifyPassword(
+      password,
+      found?.passwordHash ?? repository().decoyPasswordHash(),
+    );
     if (!found || !valid) {
       res.status(401).json({ error: 'invalid-credentials' satisfies AuthError });
       return;

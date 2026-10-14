@@ -8,11 +8,14 @@ import { EmailSettingsRepository } from './email/email-settings-repository';
 import { createEmailSettingsRouter } from './email/email-settings-router';
 import { ItemRepository } from './items/item-repository';
 import { createItemsRouter } from './items/items-router';
+import { JournalRepository } from './journal/journal-repository';
+import { createJournalRouter } from './journal/journal-router';
 
 /** Repositories are resolved per request so the database is only opened when the API is used. */
 export interface ApiServices {
   auth: () => AuthRepository;
   items: () => ItemRepository;
+  journal: () => JournalRepository;
   emailSettings: () => EmailSettingsRepository;
   today: () => string;
   /** See `AuthRouterOptions.allowRemoteSetup`. */
@@ -49,6 +52,11 @@ export function createApiRouter(services: ApiServices): Router {
     '/items',
     requirePermissions({ read: 'items:read', write: 'items:write' }),
     createItemsRouter(services.items, services.today),
+  );
+  router.use(
+    '/journal',
+    requirePermissions({ read: 'journal:read', write: 'journal:write' }),
+    createJournalRouter(services.journal),
   );
   router.use(
     '/settings/email',

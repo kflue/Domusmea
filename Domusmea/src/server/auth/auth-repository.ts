@@ -1,6 +1,7 @@
 import { createHash, randomBytes } from 'node:crypto';
 import { DatabaseSync } from 'node:sqlite';
 import {
+  DEFAULT_PASSWORD,
   DEFAULT_USERNAME,
   MAX_SIGN_INS,
   Permission,
@@ -8,14 +9,7 @@ import {
   SessionUser,
   SignIn,
 } from '../../shared/auth';
-
-/**
- * scrypt hash of the default password `admin` (from `hashPassword`). The password is public, so a
- * fixed salt costs nothing; the hash is also checked for unknown usernames, so a login takes the same
- * time whether the username exists or not.
- */
-export const DEFAULT_PASSWORD_HASH =
-  'scrypt$32768$8$1$VW0NBICeYO4xZKDe9TFJWQ==$73R0HdTWAY3TsY3CEMY6C9Nxk6Vx5ZjVrV9mugCtVPI=';
+import { hashPasswordSync } from './passwords';
 
 /** Sessions end after this long without a request (ADR 0007). */
 export const SESSION_IDLE_MS = 7 * 24 * 60 * 60 * 1000;
@@ -105,7 +99,7 @@ export class AuthRepository {
              updated_at = ?
            WHERE id = (SELECT MIN(id) FROM users WHERE role_id = ?)`,
         )
-        .run(DEFAULT_USERNAME, DEFAULT_PASSWORD_HASH, this.now(), OWNER_ROLE_ID);
+        .run(DEFAULT_USERNAME, hashPasswordSync(DEFAULT_PASSWORD), this.now(), OWNER_ROLE_ID);
       this.createDefaultAccountIfNone();
     });
   }
@@ -158,8 +152,7 @@ export class AuthRepository {
   /** The password hash of account `id`, to check the current password before a change. */
   passwordHash(id: number): string | undefined {
     const row = this.db.prepare('SELECT password_hash FROM users WHERE id = ?').get(id) as
-      | { password_hash: string }
-      | undefined;
+      { password_hash: string } | undefined;
     return row?.password_hash;
   }
 
@@ -205,7 +198,22 @@ export class AuthRepository {
       .map((row) => ({ ...(row as unknown as SignIn) }));
   }
 
+  /**
+   * A stored password hash to check a login against when the username does not exist, so that takes
+   * as long as a wrong password (same scrypt cost). The result of that check is ignored.
+   */
+  decoyPasswordHash(): string {
+    const row = this.db.prepare('SELECT password_hash FROM users ORDER BY id LIMIT 1').get() as {
+      password_hash: string;
+    };
+    return row.password_hash;
+  }
+
+  /** Creates `admin` / `admin` (with a fresh salt) when there is no account yet. */
   private createDefaultAccountIfNone(): void {
+    if (this.db.prepare('SELECT 1 FROM users LIMIT 1').get()) {
+      return;
+    }
     const now = this.now();
     this.db
       .prepare(
@@ -213,7 +221,7 @@ export class AuthRepository {
            updated_at)
          SELECT ?, ?, ?, 1, ?, ? WHERE NOT EXISTS (SELECT 1 FROM users)`,
       )
-      .run(DEFAULT_USERNAME, DEFAULT_PASSWORD_HASH, OWNER_ROLE_ID, now, now);
+      .run(DEFAULT_USERNAME, hashPasswordSync(DEFAULT_PASSWORD), OWNER_ROLE_ID, now, now);
   }
 
   private toAccount(row: AccountRow): Account {

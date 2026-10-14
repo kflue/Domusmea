@@ -22,7 +22,7 @@ on `127.0.0.1`. The home owner wants a login before the app is opened to other d
   `settings:write`, `account:manage`). The seeded role **Owner** holds all of them. A new role is a
   migration inserting it and its permissions; a new permission is granted to Owner by the migration
   that introduces it.
-- **Default account**: `AuthRepository` creates `admin` with the hash of `admin` and
+- **Default account**: `AuthRepository` creates `admin` with a freshly salted hash of `admin` (computed at runtime, never stored in code) and
   `must_change_credentials = 1` when no user exists. That account only gets a setup session: every
   API route answers 403 `setup-required` except `/api/auth/session`, `/login`, `/logout` and
   `/setup`. `POST /api/auth/setup` (username 3 to 32 of `A-Za-z0-9._-`; password 12 to 256
@@ -34,7 +34,7 @@ on `127.0.0.1`. The home owner wants a login before the app is opened to other d
   `ALLOW_REMOTE_SETUP=true` lifts this, for example for a headless server or Codespaces port
   forwarding.
 - **Passwords**: scrypt (`node:crypto`, N=2^15, r=8, p=1, 16-byte salt); parameters are stored with
-  each hash. Unknown usernames are checked against a dummy hash so they take as long as wrong
+  each hash. Unknown usernames are checked against the owner's stored hash (result ignored) so they take as long as wrong
   passwords, and both get the same 401 `invalid-credentials`.
 - **Sessions**: a random 256-bit token in the cookie `domusmea_session` (`HttpOnly`,
   `SameSite=Strict`, `Path=/`, `Secure` when the request or the proxy's `X-Forwarded-Proto` is

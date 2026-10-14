@@ -2,7 +2,8 @@ import { DatabaseSync } from 'node:sqlite';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { MAX_SIGN_INS, PERMISSIONS } from '../../shared/auth';
 import { openDatabase } from '../db';
-import { AuthRepository, DEFAULT_PASSWORD_HASH, SESSION_IDLE_MS } from './auth-repository';
+import { AuthRepository, SESSION_IDLE_MS } from './auth-repository';
+import { verifyPassword } from './passwords';
 
 describe('AuthRepository', () => {
   let db: DatabaseSync;
@@ -17,17 +18,17 @@ describe('AuthRepository', () => {
 
   const owner = () => repository.credentials('admin')!.account;
 
-  it('creates the default account with the Owner role and every permission', () => {
-    expect(repository.credentials('ADMIN')).toEqual({
-      account: {
-        id: 1,
-        username: 'admin',
-        role: 'Owner',
-        permissions: [...PERMISSIONS],
-        setupRequired: true,
-      },
-      passwordHash: DEFAULT_PASSWORD_HASH,
+  it('creates the default account with the Owner role and every permission', async () => {
+    const credentials = repository.credentials('ADMIN')!;
+    expect(credentials.account).toEqual({
+      id: 1,
+      username: 'admin',
+      role: 'Owner',
+      permissions: [...PERMISSIONS],
+      setupRequired: true,
     });
+    expect(await verifyPassword('admin', credentials.passwordHash)).toBe(true);
+    expect(repository.decoyPasswordHash()).toBe(credentials.passwordHash);
     new AuthRepository(db, () => new Date(now).toISOString());
     expect(db.prepare('SELECT COUNT(*) AS count FROM users').get()).toEqual({ count: 1 });
   });
@@ -69,13 +70,14 @@ describe('AuthRepository', () => {
     expect(rows[0].token_hash).not.toContain(token);
   });
 
-  it('resets to the default credentials without touching other data', () => {
+  it('resets to the default credentials without touching other data', async () => {
     db.exec(`INSERT INTO items (name, created_at, updated_at) VALUES ('Roof', 'x', 'x')`);
     repository.completeSetup(1, 'anna', 'scrypt$new');
     const token = repository.createSession(1);
 
     repository.resetToDefault();
     expect(repository.credentials('anna')).toBeUndefined();
+    expect(await verifyPassword('admin', repository.credentials('admin')!.passwordHash)).toBe(true);
     expect(owner()).toMatchObject({ id: 1, setupRequired: true });
     expect(repository.sessionAccount(token)).toBeUndefined();
     expect(db.prepare('SELECT COUNT(*) AS count FROM items').get()).toEqual({ count: 1 });

@@ -1,4 +1,4 @@
-import { randomBytes, scrypt, type ScryptOptions, timingSafeEqual } from 'node:crypto';
+import { randomBytes, scrypt, scryptSync, type ScryptOptions, timingSafeEqual } from 'node:crypto';
 
 /**
  * scrypt cost: about 100 ms and 32 MiB per hash on a small server. The parameters are stored with
@@ -11,7 +11,19 @@ const SALT_LENGTH = 16;
 /** Hashes a password as `scrypt$N$r$p$<salt>$<hash>` (base64), with a random salt. */
 export async function hashPassword(password: string): Promise<string> {
   const salt = randomBytes(SALT_LENGTH);
-  const hash = await derive(password, salt, COST);
+  return format(salt, await derive(password, salt, COST));
+}
+
+/**
+ * {@link hashPassword} without a callback, for the rare places that cannot wait (creating or
+ * resetting the default account). Blocks for one hash, about 100 ms.
+ */
+export function hashPasswordSync(password: string): string {
+  const salt = randomBytes(SALT_LENGTH);
+  return format(salt, scryptSync(password.normalize('NFC'), salt, KEY_LENGTH, options(COST)));
+}
+
+function format(salt: Buffer, hash: Buffer): string {
   return ['scrypt', COST.N, COST.r, COST.p, salt.toString('base64'), hash.toString('base64')].join(
     '$',
   );
@@ -40,10 +52,13 @@ function derive(
   cost: { N: number; r: number; p: number },
   length = KEY_LENGTH,
 ): Promise<Buffer> {
-  const options: ScryptOptions = { ...cost, maxmem: 256 * cost.N * cost.r };
   return new Promise((resolve, reject) =>
-    scrypt(password.normalize('NFC'), salt, length, options, (error, key) =>
+    scrypt(password.normalize('NFC'), salt, length, options(cost), (error, key) =>
       error ? reject(error) : resolve(key),
     ),
   );
+}
+
+function options(cost: { N: number; r: number; p: number }): ScryptOptions {
+  return { ...cost, maxmem: 256 * cost.N * cost.r };
 }

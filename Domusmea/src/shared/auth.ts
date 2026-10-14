@@ -5,6 +5,8 @@
 export const PERMISSIONS = [
   'items:read',
   'items:write',
+  'journal:read',
+  'journal:write',
   'settings:read',
   'settings:write',
   'account:manage',
