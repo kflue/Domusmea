@@ -1,5 +1,5 @@
 import { HttpClient } from '@angular/common/http';
-import { inject, Service, signal } from '@angular/core';
+import { computed, inject, Service, signal } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 import { LoginInput, SessionResponse, SessionUser, SetupInput } from '../../shared/auth';
 
@@ -16,6 +16,11 @@ export class AuthApi {
   private loading: Promise<SessionUser | null> | undefined;
 
   readonly user = this.current.asReadonly();
+  /** The signed-in user once the first-run setup is done; the navigation is hidden before. */
+  readonly activeUser = computed(() => {
+    const user = this.current();
+    return user && !user.setupRequired ? user : undefined;
+  });
 
   /** The signed-in user, asking the server only the first time. */
   async currentUser(): Promise<SessionUser | null> {

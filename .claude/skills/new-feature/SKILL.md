@@ -33,6 +33,9 @@ Build `$ARGUMENTS` as one slice through the stack.
 - Follow `.claude/rules/angular.md` (Angular's official best practices) and the `angular-developer`
   skill references for the APIs involved: lazy-loaded route per feature, Signal Forms for new forms,
   `@Service` for new singleton services, `httpResource`/`resource` for reads.
+- Register the feature in the side navigation (ADR 0008): export a `NavTopic` (path, label, outline
+  SVG icon path, `<feature>:read` permission) from `<feature>/<feature>.nav.ts` and add
+  `provideNavTopic(...)` to `app.config.ts`.
 - A feature service wraps `HttpClient`; components never call HTTP directly.
 - Add a `RenderMode.Server` or `RenderMode.Client` entry in `app.routes.server.ts` for routes showing
   per-user data (the `'**'` default prerenders at build time).

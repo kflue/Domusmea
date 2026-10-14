@@ -34,6 +34,8 @@ Overview, source layout rules, environment variables and decision records (ADRs)
 
 - Angular 22, standalone components only (no NgModules), signals, zoneless by default; selector
   prefix `app`. Root component `App` in `src/app/app.ts`, routes in `src/app/app.routes.ts`.
+- Layout in `src/app/layout/` (ADR 0008): top bar (Settings, user, sign-out) and a collapsible side
+  navigation. Features add their topic with `provideNavTopic(...)` in `src/app/app.config.ts`.
 - Styling is Tailwind CSS v4 through PostCSS (`.postcssrc.json`, `@import 'tailwindcss'` in
   `src/styles.css`). Component style budgets: 4kB warning, 8kB error.
 - **Backend = the SSR Express server** `src/server.ts` (Express 5). It only wires things up: mounts the

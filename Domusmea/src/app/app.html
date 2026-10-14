@@ -1,29 +1,12 @@
-<header class="border-b border-gray-200 bg-white">
-  <nav class="mx-auto flex max-w-5xl flex-wrap items-center gap-6 px-4 py-3" aria-label="Main">
-    <a routerLink="/" class="text-xl font-semibold">{{ title() }}</a>
-    @if (user(); as user) {
-      <a routerLink="/items" routerLinkActive="font-semibold underline" ariaCurrentWhenActive="page">
-        Appliances &amp; building parts
-      </a>
-      <a routerLink="/journal" routerLinkActive="font-semibold underline" ariaCurrentWhenActive="page">
-        Repairs &amp; investments
-      </a>
-      <a
-        routerLink="/settings"
-        routerLinkActive="font-semibold underline"
-        ariaCurrentWhenActive="page"
-        class="ml-auto"
-      >
-        Settings
-      </a>
-      <span class="text-sm text-gray-700">
-        Signed in as <span class="font-medium">{{ user.username }}</span>
-      </span>
-      <button type="button" class="btn-secondary" (click)="signOut()">Sign out</button>
-    }
-  </nav>
-</header>
+<app-top-bar />
 
-<main class="mx-auto max-w-5xl px-4 py-8">
-  <router-outlet />
-</main>
+<div class="flex">
+  @if (user()) {
+    <app-side-nav />
+  }
+  <main class="min-w-0 flex-1 px-4 py-8">
+    <div class="mx-auto max-w-5xl">
+      <router-outlet />
+    </div>
+  </main>
+</div>
