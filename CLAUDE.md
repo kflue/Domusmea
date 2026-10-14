@@ -87,4 +87,5 @@ Overview, source layout rules, environment variables and decision records (ADRs)
 - Fix new Sonar issues in code you touch; do not leave a failing quality gate.
 - Do not run `sonar` (SonarScanner CLI) against SonarCloud while automatic analysis is enabled: the
   server rejects manual analyses and the run fails. A PreToolUse hook blocks it. `sonar-project.properties`
-  is only read by the CLI, not by automatic analysis.
+  is only read by the CLI; automatic analysis reads `.sonarcloud.properties` (sources, exclusions,
+  tests). Keep both in sync.
