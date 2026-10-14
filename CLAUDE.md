@@ -97,8 +97,11 @@ Workflow rules).
 
 - Organization `kflue`, project key `kflue_Domusmea`. SonarCloud **automatic analysis** is enabled: the
   `main` branch and pull requests are analyzed on push, there is no CI scan.
+- **Feature branches are only analyzed once they have a pull request.** Pushing a branch without a PR
+  gives no Sonar result; open the PR first, then check the gate with `pullRequest` (key from
+  `list_pull_requests`), never with `branch`.
 - Use the `sonarqube` MCP server to:
-  - read issues, quality gate status and metrics for `kflue_Domusmea` after a push;
+  - read issues, quality gate status and metrics for `kflue_Domusmea` after a push to `main` or a PR;
   - check changed files locally before committing (`analyze_file_list` via SonarQube for IDE, or
     `analyze_code_snippet` with project key `kflue_Domusmea`).
 - Fix new Sonar issues in code you touch; do not leave a failing quality gate.
