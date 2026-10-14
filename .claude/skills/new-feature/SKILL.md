@@ -20,8 +20,11 @@ Build `$ARGUMENTS` as one slice through the stack.
   Angular handlers. Once there is more than one feature, mount a per-feature `express.Router` from its
   own file instead of growing `server.ts`.
 - One router/module per feature; validate every request body, param and query at the boundary.
-- Every endpoint that touches user data must check authentication **and** that the resource belongs to
-  the requesting user/household.
+- Every endpoint that touches user data must check authentication **and** authorization. Domusmea
+  serves one household, so authorization is the role's permissions (ADR 0007): add `<feature>:read` /
+  `<feature>:write` to `src/shared/auth.ts`, grant them to existing roles in the migration, and mount
+  the router with `requirePermissions(...)`. Per-user ownership checks only apply to per-user data
+  (like the account).
 - Typed request/response DTOs shared with, or mirrored in, the frontend.
 - Tests for the happy path, validation errors and authorization failures.
 

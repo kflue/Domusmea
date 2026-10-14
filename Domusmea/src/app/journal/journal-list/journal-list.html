@@ -1,0 +1,93 @@
+<section>
+  <div class="mb-6 flex flex-wrap items-center justify-between gap-3">
+    <h1 id="journal-heading" tabindex="-1" class="text-2xl font-semibold">
+      Repairs &amp; investments
+    </h1>
+    <a routerLink="/journal/new" class="btn-primary">Add entry</a>
+  </div>
+
+  @if (deleteError()) {
+    <p role="alert" class="mb-4 rounded border border-red-300 bg-red-50 p-3 text-red-800">
+      {{ deleteError() }}
+    </p>
+  }
+
+  @if (list.error()) {
+    <p role="alert" class="rounded border border-red-300 bg-red-50 p-3 text-red-800">
+      The journal could not be loaded.
+      <button type="button" class="underline" (click)="list.reload()">Try again</button>
+    </p>
+  } @else if (!list.hasValue()) {
+    <p aria-live="polite">Loading…</p>
+  } @else if (years().length === 0) {
+    <p class="text-gray-700">
+      No entries yet. Record repairs and investments to keep the history of your house and its
+      costs.
+    </p>
+  } @else {
+    <div class="mb-4 flex flex-wrap items-end gap-6">
+      <div>
+        <label for="year" class="block font-medium">Year</label>
+        <select id="year" class="field" [value]="year()" (change)="selectYear($event)">
+          <option value="">All years</option>
+          @for (y of years(); track y) {
+            <option [value]="y">{{ y }}</option>
+          }
+        </select>
+      </div>
+      <dl class="flex flex-wrap gap-6" aria-label="Totals">
+        @for (kind of totals().kinds; track kind.label) {
+          <div>
+            <dt class="text-sm text-gray-600">{{ kind.label }}</dt>
+            <dd class="font-semibold whitespace-nowrap">{{ kind.total }}</dd>
+          </div>
+        }
+        <div>
+          <dt class="text-sm text-gray-600">Total</dt>
+          <dd class="font-semibold whitespace-nowrap">{{ totals().all }}</dd>
+        </div>
+      </dl>
+    </div>
+
+    <div class="overflow-x-auto">
+      <table class="w-full border-collapse text-left">
+        <caption class="sr-only">
+          Repairs and investments, newest first
+        </caption>
+        <thead>
+          <tr class="border-b border-gray-300">
+            <th scope="col" class="p-2">Date</th>
+            <th scope="col" class="p-2">Work</th>
+            <th scope="col" class="p-2">Kind</th>
+            <th scope="col" class="p-2 text-right">Cost</th>
+            <th scope="col" class="p-2"><span class="sr-only">Actions</span></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (entry of shown(); track entry.id) {
+            <tr class="border-b border-gray-200 align-top">
+              <td class="p-2 whitespace-nowrap">{{ formatDate(entry.date) }}</td>
+              <th scope="row" class="p-2 font-medium">
+                <a [routerLink]="['/journal', entry.id]" class="underline">{{ entry.title }}</a>
+                @if (details(entry); as details) {
+                  <span class="block text-sm font-normal text-gray-600">{{ details }}</span>
+                }
+              </th>
+              <td class="p-2">{{ kindLabels[entry.kind] }}</td>
+              <td class="p-2 text-right whitespace-nowrap">
+                {{ entry.costRappen === null ? '–' : formatChf(entry.costRappen) }}
+              </td>
+              <td class="p-2 text-right whitespace-nowrap">
+                <app-confirm-delete [name]="entry.title" (confirmed)="delete(entry)" />
+              </td>
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="5" class="p-2 text-gray-700">No entries in {{ year() }}.</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</section>

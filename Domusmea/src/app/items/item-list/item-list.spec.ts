@@ -75,18 +75,20 @@ describe('ItemList', () => {
     const fixture = await render({ today: '2026-10-01', items: [baseItem] });
     const element = fixture.nativeElement as HTMLElement;
 
-    element.querySelector<HTMLButtonElement>('#delete-1')!.click();
-    await fixture.whenStable();
-    const confirm = element.querySelector<HTMLButtonElement>('#confirm-delete-1');
-    expect(document.activeElement).toBe(confirm);
+    const button = (label: string) =>
+      element.querySelector<HTMLButtonElement>(`[aria-label="${label}"]`);
 
-    element.querySelector<HTMLButtonElement>('[aria-label="Keep Dishwasher"]')!.click();
+    button('Delete Dishwasher')!.click();
     await fixture.whenStable();
-    expect(document.activeElement).toBe(element.querySelector('#delete-1'));
+    expect(document.activeElement).toBe(button('Confirm: delete Dishwasher'));
 
-    element.querySelector<HTMLButtonElement>('#delete-1')!.click();
+    button('Keep Dishwasher')!.click();
     await fixture.whenStable();
-    element.querySelector<HTMLButtonElement>('#confirm-delete-1')!.click();
+    expect(document.activeElement).toBe(button('Delete Dishwasher'));
+
+    button('Delete Dishwasher')!.click();
+    await fixture.whenStable();
+    button('Confirm: delete Dishwasher')!.click();
     http.expectOne({ method: 'DELETE', url: '/api/items/1' }).flush(null);
     await settle();
     http.expectOne('/api/items').flush({ today: '2026-10-01', items: [] });

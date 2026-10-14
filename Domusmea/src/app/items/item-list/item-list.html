@@ -65,35 +65,7 @@
                 }
               </td>
               <td class="p-2 text-right whitespace-nowrap">
-                @if (confirmingDelete() === row.item.id) {
-                  <button
-                    type="button"
-                    class="btn-danger"
-                    [id]="'confirm-delete-' + row.item.id"
-                    [attr.aria-label]="'Confirm: delete ' + row.item.name"
-                    (click)="delete(row.item)"
-                  >
-                    Confirm delete
-                  </button>
-                  <button
-                    type="button"
-                    class="btn-secondary ml-2"
-                    [attr.aria-label]="'Keep ' + row.item.name"
-                    (click)="cancelDelete(row.item)"
-                  >
-                    Cancel
-                  </button>
-                } @else {
-                  <button
-                    type="button"
-                    class="btn-secondary"
-                    [id]="'delete-' + row.item.id"
-                    [attr.aria-label]="'Delete ' + row.item.name"
-                    (click)="askDelete(row.item)"
-                  >
-                    Delete
-                  </button>
-                }
+                <app-confirm-delete [name]="row.item.name" (confirmed)="delete(row.item)" />
               </td>
             </tr>
           }
