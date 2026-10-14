@@ -1,13 +1,17 @@
 import { formatChf, formatDate } from '../../shared/format';
 import { Item, ITEM_CATEGORY_LABELS } from '../../shared/item';
 import { ItemRepository } from '../items/item-repository';
-import { Mail, Mailer } from './mailer';
+import { Mail, Mailer } from '../email/mailer';
 
 export interface WarrantyNotifierDeps {
   repository: () => ItemRepository;
-  mailer: Mailer;
-  /** Email recipients; with none, nothing is sent and items stay unannounced. */
-  recipients: readonly string[];
+  /**
+   * Email recipients from the current settings, read at every check so changes apply without a
+   * restart. With none, nothing is sent and items stay unannounced.
+   */
+  recipients: () => readonly string[];
+  /** Mailer for the current settings; only created when an email is due. */
+  mailer: () => Mailer;
   /** Today's date in the app time zone as `YYYY-MM-DD`. */
   today: () => string;
 }
@@ -18,7 +22,8 @@ export interface WarrantyNotifierDeps {
  * Returns the number of announced items.
  */
 export async function notifyExpiredWarranties(deps: WarrantyNotifierDeps): Promise<number> {
-  if (deps.recipients.length === 0) {
+  const recipients = deps.recipients();
+  if (recipients.length === 0) {
     return 0;
   }
   const today = deps.today();
@@ -27,7 +32,7 @@ export async function notifyExpiredWarranties(deps: WarrantyNotifierDeps): Promi
   if (items.length === 0) {
     return 0;
   }
-  await deps.mailer.send(warrantyMail(items, deps.recipients, today));
+  await deps.mailer().send(warrantyMail(items, recipients, today));
   repository.markWarrantyNotified(
     items.map((item) => item.id),
     today,
@@ -99,9 +104,6 @@ export function startWarrantyNotifier(
   deps: WarrantyNotifierDeps,
   intervalMs = HOUR_MS,
 ): () => void {
-  if (deps.recipients.length === 0) {
-    console.warn('Warranty emails disabled: WARRANTY_NOTIFY_TO is not set.');
-  }
   let running = false;
   const run = async () => {
     if (running) {

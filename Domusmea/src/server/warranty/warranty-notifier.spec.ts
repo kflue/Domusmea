@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { openDatabase } from '../db';
 import { ItemRepository } from '../items/item-repository';
 import { testClock } from '../items/test-clock';
-import { Mail, Mailer } from './mailer';
+import { Mail, Mailer } from '../email/mailer';
 import { notifyExpiredWarranties, WarrantyNotifierDeps } from './warranty-notifier';
 
 describe('notifyExpiredWarranties', () => {
@@ -20,8 +20,8 @@ describe('notifyExpiredWarranties', () => {
     sent = [];
     deps = {
       repository: () => repository,
-      mailer,
-      recipients: ['home@example.ch'],
+      recipients: () => ['home@example.ch'],
+      mailer: () => mailer,
       today: clock.today,
     };
     repository.create({
@@ -71,15 +71,21 @@ describe('notifyExpiredWarranties', () => {
     clock.set('2026-10-10');
     const failing = { send: vi.fn().mockRejectedValue(new Error('SMTP down')) };
 
-    await expect(notifyExpiredWarranties({ ...deps, mailer: failing })).rejects.toThrow(
+    await expect(notifyExpiredWarranties({ ...deps, mailer: () => failing })).rejects.toThrow(
       'SMTP down',
     );
     expect(await notifyExpiredWarranties(deps)).toBe(1);
   });
 
+  it('creates the mailer (decrypting the password) only when an email is due', async () => {
+    const mailerFactory = vi.fn(() => mailer);
+    expect(await notifyExpiredWarranties({ ...deps, mailer: mailerFactory })).toBe(0);
+    expect(mailerFactory).not.toHaveBeenCalled();
+  });
+
   it('sends nothing without recipients', async () => {
     clock.set('2026-10-10');
-    expect(await notifyExpiredWarranties({ ...deps, recipients: [] })).toBe(0);
+    expect(await notifyExpiredWarranties({ ...deps, recipients: () => [] })).toBe(0);
     expect(sent).toEqual([]);
   });
 });

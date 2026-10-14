@@ -7,10 +7,11 @@ file.
 ```
 Browser ──HTTP──▶ Express (src/server.ts)
                    ├─ /api guards (host allowlist, same-origin writes: src/server/security.ts)
-                   ├─ /api/items  ──▶ src/server/items/    ──▶ SQLite (src/server/db.ts)
+                   ├─ /api/items          ──▶ src/server/items/ ──▶ SQLite (src/server/db.ts)
+                   ├─ /api/settings/email ──▶ src/server/email/ ──▶ SQLite, SMTP (test email)
                    ├─ static files (dist/browser)
                    └─ Angular SSR (AngularNodeAppEngine)
-                  warranty notifier (hourly, in-process) ──▶ SQLite, SMTP (src/server/warranty/)
+                  warranty notifier (hourly, in-process) ──▶ SQLite, SMTP (src/server/warranty/, email/)
 ```
 
 ## Source layout (`Domusmea/src/`)
@@ -33,16 +34,16 @@ Rules:
 
 ## Configuration (environment variables)
 
-| Variable                                                                       | Default                                                | Purpose                                                                                     |
-| ------------------------------------------------------------------------------ | ------------------------------------------------------ | ------------------------------------------------------------------------------------------- |
-| `DB_PATH`                                                                      | `data/domusmea.db` (relative to the working directory) | SQLite file                                                                                 |
-| `WARRANTY_NOTIFY_TO`                                                           | none                                                   | Comma-separated recipients of warranty emails; without it no email is sent                  |
-| `SMTP_HOST`, `SMTP_PORT`, `SMTP_SECURE`, `SMTP_USER`, `SMTP_PASS`, `SMTP_FROM` | none                                                   | SMTP delivery; without `SMTP_HOST` emails are logged to the console                         |
-| `SMTP_REQUIRE_TLS`                                                             | `true`                                                 | Set to `false` only for local test mail servers without TLS                                 |
-| `APP_TIMEZONE`                                                                 | `Europe/Zurich`                                        | Time zone that defines "today" for warranty expiry; invalid values fall back to the default |
-| `PORT`                                                                         | `4000`                                                 | Port of the built server                                                                    |
-| `HOST`                                                                         | `127.0.0.1`                                            | Interface of the built server; see ADR 0005 before exposing it                              |
-| `ALLOWED_HOSTS`                                                                | none                                                   | Extra host names accepted by `/api` (comma-separated, `*.domain` allowed)                   |
+The SMTP server and the reminder recipients are set on the Settings page (`/settings`, ADR 0006).
+
+| Variable        | Default                                                | Purpose                                                                                     |
+| --------------- | ------------------------------------------------------ | ------------------------------------------------------------------------------------------- |
+| `DB_PATH`       | `data/domusmea.db` (relative to the working directory) | SQLite file                                                                                 |
+| `SETTINGS_KEY`  | none                                                   | Encrypts the stored SMTP password: 32 random bytes, base64 (`openssl rand -base64 32`)      |
+| `APP_TIMEZONE`  | `Europe/Zurich`                                        | Time zone that defines "today" for warranty expiry; invalid values fall back to the default |
+| `PORT`          | `4000`                                                 | Port of the built server                                                                    |
+| `HOST`          | `127.0.0.1`                                            | Interface of the built server; see ADR 0005 before exposing it                              |
+| `ALLOWED_HOSTS` | none                                                   | Extra host names accepted by `/api` (comma-separated, `*.domain` allowed)                   |
 
 There is no login yet: anyone who can reach the API can change all data. See
 [ADR 0005](adr/0005-no-login-network-safeguards.md) for the safeguards and what to do before
@@ -57,5 +58,6 @@ exposing the server beyond `localhost`.
 | [0003](adr/0003-warranty-expiry-notifications.md) | In-process hourly warranty check, email via SMTP                     |
 | [0004](adr/0004-money-and-dates.md)               | CHF stored as integer Rappen; dates as ISO strings                   |
 | [0005](adr/0005-no-login-network-safeguards.md)   | No login yet; host allowlist, local binding and other API safeguards |
+| [0006](adr/0006-email-settings-in-database.md)    | SMTP server and recipients set in the UI, password encrypted         |
 
 New decisions get the next number; superseded ADRs stay and are marked as such.

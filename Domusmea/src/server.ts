@@ -6,7 +6,13 @@ import {
 } from '@angular/ssr/node';
 import express from 'express';
 import { join } from 'node:path';
-import { clock, itemRepository, startBackgroundJobs } from './server/app-services';
+import {
+  clock,
+  emailSettingsRepository,
+  itemRepository,
+  startBackgroundJobs,
+} from './server/app-services';
+import { createEmailSettingsRouter } from './server/email/email-settings-router';
 import { createItemsRouter } from './server/items/items-router';
 import {
   allowedHostMatcher,
@@ -39,6 +45,7 @@ app.use((_req, _res, next) => {
 const isAllowedHost = allowedHostMatcher();
 app.use('/api', requireAllowedHost(isAllowedHost), rejectCrossSiteWrites(isAllowedHost));
 app.use('/api/items', createItemsRouter(itemRepository, clock.today));
+app.use('/api/settings/email', createEmailSettingsRouter(emailSettingsRepository));
 app.use('/api', (_req, res) => {
   res.status(404).json({ error: 'not-found' });
 });

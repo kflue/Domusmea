@@ -23,6 +23,18 @@ const MIGRATIONS: readonly string[] = [
      updated_at TEXT NOT NULL
    );
    CREATE INDEX items_warranty_pending ON items (warranty_expires) WHERE warranty_notified_at IS NULL;`,
+  // Single row; recipients as a JSON array, smtp_password encrypted (ADR 0006).
+  `CREATE TABLE email_settings (
+     id INTEGER PRIMARY KEY CHECK (id = 1),
+     smtp_host TEXT,
+     smtp_port INTEGER NOT NULL CHECK (smtp_port BETWEEN 1 AND 65535),
+     smtp_security TEXT NOT NULL CHECK (smtp_security IN ('starttls', 'tls', 'none')),
+     smtp_username TEXT,
+     smtp_password TEXT,
+     from_address TEXT,
+     recipients TEXT NOT NULL,
+     updated_at TEXT NOT NULL
+   );`,
 ];
 
 export const DEFAULT_DB_PATH = 'data/domusmea.db';

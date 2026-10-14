@@ -1,6 +1,7 @@
 # 0003: Warranty expiry notifications
 
-- Status: accepted
+- Status: accepted; recipients and SMTP configuration superseded by
+  [ADR 0006](0006-email-settings-in-database.md) (set on the Settings page, not by environment variables)
 - Date: 2026-10-10
 
 ## Context

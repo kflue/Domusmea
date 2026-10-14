@@ -15,6 +15,11 @@ mkdir -p "$SONAR_MCP_DIR/storage"
 curl -fsSL -o "$SONAR_MCP_DIR/sonarqube-mcp-server.jar" \
   "https://binaries.sonarsource.com/Distribution/sonarqube-mcp-server/sonarqube-mcp-server-${SONAR_MCP_VERSION}.jar"
 
+# Development key for encrypting the SMTP password stored on the Settings page (ADR 0006).
+if ! grep -q 'SETTINGS_KEY=' ~/.bashrc; then
+  echo "export SETTINGS_KEY=$(node -e "console.log(require('crypto').randomBytes(32).toString('base64'))")" >> ~/.bashrc
+fi
+
 if [ -f Domusmea/package.json ]; then
   npm install --prefix Domusmea
 fi

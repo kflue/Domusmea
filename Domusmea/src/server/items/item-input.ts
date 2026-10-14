@@ -1,21 +1,8 @@
 import { z } from 'zod';
+import { optionalText, singleLine } from '../text-validation';
 import { ITEM_CATEGORIES, ITEM_TEXT_MAX_LENGTH, ItemInput } from '../../shared/item';
 
-/**
- * Single-line text: trimmed, no control characters (line breaks would let API callers shape the
- * warranty email's text).
- */
-const singleLine = () =>
-  z
-    .string()
-    .trim()
-    .max(ITEM_TEXT_MAX_LENGTH)
-    .regex(/^\P{Cc}*$/u, 'Must not contain line breaks or control characters');
-
-/** Optional text: empty or missing becomes `null`. */
-const optionalText = singleLine()
-  .nullish()
-  .transform((value) => value || null);
+const itemText = optionalText(ITEM_TEXT_MAX_LENGTH);
 
 const optionalDate = z.iso
   .date()
@@ -25,7 +12,7 @@ const optionalDate = z.iso
 /** Validates the body of `POST /api/items` and `PUT /api/items/:id`. Unknown fields are rejected. */
 export const itemInputSchema = z
   .strictObject({
-    name: singleLine().min(1),
+    name: singleLine(ITEM_TEXT_MAX_LENGTH).min(1),
     category: z
       .enum(ITEM_CATEGORIES)
       .nullish()
@@ -39,10 +26,10 @@ export const itemInputSchema = z
       .nullish()
       .transform((value) => value ?? null),
     warrantyExpires: optionalDate,
-    manufacturer: optionalText,
-    model: optionalText,
-    serialNumber: optionalText,
-    seller: optionalText,
+    manufacturer: itemText,
+    model: itemText,
+    serialNumber: itemText,
+    seller: itemText,
   })
   .refine(
     (item) =>

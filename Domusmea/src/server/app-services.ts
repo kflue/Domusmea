@@ -1,8 +1,10 @@
 import { DatabaseSync } from 'node:sqlite';
 import { DEFAULT_TIME_ZONE, todayIn } from '../shared/format';
 import { DEFAULT_DB_PATH, openDatabase } from './db';
+import { EmailSettingsRepository } from './email/email-settings-repository';
+import { createMailer } from './email/mailer';
+import { secretBoxFromEnv } from './email/secret-box';
 import { Clock, ItemRepository } from './items/item-repository';
-import { createMailer } from './warranty/mailer';
 import { startWarrantyNotifier } from './warranty/warranty-notifier';
 
 /**
@@ -18,11 +20,25 @@ export const clock: Clock = {
 
 let database: DatabaseSync | undefined;
 let items: ItemRepository | undefined;
+let emailSettings: EmailSettingsRepository | undefined;
+
+function db(): DatabaseSync {
+  database ??= openDatabase(process.env['DB_PATH'] ?? DEFAULT_DB_PATH);
+  return database;
+}
 
 export function itemRepository(): ItemRepository {
-  database ??= openDatabase(process.env['DB_PATH'] ?? DEFAULT_DB_PATH);
-  items ??= new ItemRepository(database, clock);
+  items ??= new ItemRepository(db(), clock);
   return items;
+}
+
+export function emailSettingsRepository(): EmailSettingsRepository {
+  emailSettings ??= new EmailSettingsRepository(
+    db(),
+    secretBoxFromEnv(process.env['SETTINGS_KEY']),
+    clock.now,
+  );
+  return emailSettings;
 }
 
 /** Global flag so a dev-server reload of `server.ts` does not start a second set of jobs. */
@@ -37,8 +53,8 @@ export function startBackgroundJobs(): void {
   global[JOBS_STARTED] = true;
   startWarrantyNotifier({
     repository: itemRepository,
-    mailer: createMailer(),
-    recipients: parseRecipients(process.env['WARRANTY_NOTIFY_TO']),
+    recipients: () => emailSettingsRepository().get().recipients,
+    mailer: () => createMailer(emailSettingsRepository().mailConfig().smtp),
     today: clock.today,
   });
 }
@@ -55,11 +71,4 @@ export function validTimeZone(value: string | undefined): string {
     console.error(`Invalid APP_TIMEZONE "${value}"; using ${DEFAULT_TIME_ZONE}.`);
     return DEFAULT_TIME_ZONE;
   }
-}
-
-export function parseRecipients(value: string | undefined): string[] {
-  return (value ?? '')
-    .split(',')
-    .map((address) => address.trim())
-    .filter(Boolean);
 }

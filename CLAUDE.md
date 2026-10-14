@@ -54,6 +54,8 @@ Overview, source layout rules, environment variables and decision records (ADRs)
 - Code runs on the server too: guard browser-only APIs (`window`, `localStorage`) with
   `isPlatformBrowser` or `afterNextRender`.
 - TypeScript 6 with strict Angular compiler options; Node APIs only in `server.ts` and `src/server/`.
+- Email (SMTP server, recipients) is configured on the Settings page and stored in the database; the
+  SMTP password is encrypted with `SETTINGS_KEY` and never returned by the API (ADR 0006).
 - Money is integer Rappen (CHF), calendar dates `YYYY-MM-DD` strings (ADR 0004); format with
   `src/shared/format.ts`.
 

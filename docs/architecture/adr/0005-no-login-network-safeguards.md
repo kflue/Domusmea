@@ -1,6 +1,6 @@
 # 0005: No login yet; safeguards for the unauthenticated API
 
-- Status: accepted
+- Status: accepted; the SMTP item is superseded by [ADR 0006](0006-email-settings-in-database.md)
 - Date: 2026-10-11
 
 ## Context
