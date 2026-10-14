@@ -11,6 +11,15 @@ Latin for "my home": home management software for home owners.
 The repository root holds tooling only (devcontainer, `.mcp.json`, `.claude/`, Sonar config). The
 application is the Angular CLI workspace in `Domusmea/`; run all npm/`ng` commands from there.
 
+## Workflow rules
+
+- **Never commit to `main` directly.** Start every feature and bugfix on a new branch created from an
+  up-to-date `main` (`git switch main && git pull && git switch -c feature/<name>` or `fix/<name>`),
+  and merge it through a pull request.
+- **Always document architectural decisions** as the next numbered ADR in `docs/architecture/adr/`.
+  Add it to the decisions table in `docs/architecture/README.md` and update the README and this file
+  where the decision changes what they describe.
+
 ## Commands (from `Domusmea/`)
 
 - `npm start`: dev server on http://localhost:4200, with SSR (it runs `src/server.ts`, so `/api`
@@ -30,7 +39,8 @@ application is the Angular CLI workspace in `Domusmea/`; run all npm/`ng` comman
 ## Architecture
 
 Overview, source layout rules, environment variables and decision records (ADRs):
-`docs/architecture/`. Record new architectural decisions there as the next numbered ADR.
+`docs/architecture/`. Record every new architectural decision there as the next numbered ADR (see
+Workflow rules).
 
 - Angular 22, standalone components only (no NgModules), signals, zoneless by default; selector
   prefix `app`. Root component `App` in `src/app/app.ts`, routes in `src/app/app.routes.ts`.
