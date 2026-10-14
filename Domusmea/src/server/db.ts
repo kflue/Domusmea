@@ -35,6 +35,37 @@ const MIGRATIONS: readonly string[] = [
      recipients TEXT NOT NULL,
      updated_at TEXT NOT NULL
    );`,
+  // Login with roles as sets of permissions (ADR 0007). Sessions are stored by token hash; the
+  // default account is created by AuthRepository so its password hash is not part of the schema.
+  `CREATE TABLE roles (
+     id INTEGER PRIMARY KEY,
+     name TEXT NOT NULL UNIQUE
+   );
+   CREATE TABLE role_permissions (
+     role_id INTEGER NOT NULL REFERENCES roles (id) ON DELETE CASCADE,
+     permission TEXT NOT NULL,
+     PRIMARY KEY (role_id, permission)
+   );
+   CREATE TABLE users (
+     id INTEGER PRIMARY KEY,
+     username TEXT NOT NULL UNIQUE COLLATE NOCASE,
+     password_hash TEXT NOT NULL,
+     role_id INTEGER NOT NULL REFERENCES roles (id),
+     must_change_credentials INTEGER NOT NULL CHECK (must_change_credentials IN (0, 1)),
+     created_at TEXT NOT NULL,
+     updated_at TEXT NOT NULL
+   );
+   CREATE TABLE sessions (
+     token_hash TEXT PRIMARY KEY,
+     user_id INTEGER NOT NULL REFERENCES users (id) ON DELETE CASCADE,
+     created_at TEXT NOT NULL,
+     last_seen_at TEXT NOT NULL
+   );
+   CREATE INDEX sessions_user ON sessions (user_id);
+   INSERT INTO roles (id, name) VALUES (1, 'Owner');
+   INSERT INTO role_permissions (role_id, permission) VALUES
+     (1, 'items:read'), (1, 'items:write'), (1, 'settings:read'), (1, 'settings:write'),
+     (1, 'account:manage');`,
 ];
 
 export const DEFAULT_DB_PATH = 'data/domusmea.db';

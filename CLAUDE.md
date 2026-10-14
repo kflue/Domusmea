@@ -22,6 +22,7 @@ application is the Angular CLI workspace in `Domusmea/`; run all npm/`ng` comman
   `--filter '<regex>'` to match suite or test names.
 - `npm run test:server`: backend and shared-code tests (`src/server`, `src/shared`) with plain Vitest in
   Node (`vitest.server.config.ts`). Single file: `npm run test:server -- src/server/db.spec.ts`.
+- `npm run reset-login`: forgotten password; resets the account to `admin` / `admin` (needs a build).
 - `npx ng generate component <name>` etc. for scaffolding.
 - No ESLint config or `lint` script yet; formatting is Prettier (`.prettierrc`: single quotes, width
   100, Angular parser for HTML), applied to edited files by a PostToolUse hook in `.claude/settings.json`.
@@ -35,16 +36,20 @@ Overview, source layout rules, environment variables and decision records (ADRs)
   prefix `app`. Root component `App` in `src/app/app.ts`, routes in `src/app/app.routes.ts`.
 - Styling is Tailwind CSS v4 through PostCSS (`.postcssrc.json`, `@import 'tailwindcss'` in
   `src/styles.css`). Component style budgets: 4kB warning, 8kB error.
-- **Backend = the SSR Express server** `src/server.ts` (Express 5). It only wires things up: mounts one
-  router per feature under `/api` (before the static and Angular handlers) and starts background jobs.
+- **Backend = the SSR Express server** `src/server.ts` (Express 5). It only wires things up: mounts the
+  API router `src/server/api-router.ts` under `/api` (before the static and Angular handlers) and
+  starts background jobs. `api-router.ts` mounts one router per feature with its permissions.
   Feature code lives in `src/server/<feature>/` (repository with SQL + router with zod validation);
   types shared with the UI in `src/shared/`. `src/app` and `src/server` never import each other.
 - Data: SQLite through Node's built-in `node:sqlite` (`src/server/db.ts`, numbered migrations via
   `PRAGMA user_version`). `node:sqlite` is listed in `externalDependencies` in `angular.json` because
   esbuild would otherwise rewrite it to a bare `sqlite` import.
-- No login yet: `/api` is guarded by a host allowlist and same-origin-writes check
-  (`src/server/security.ts`), and the built server binds `127.0.0.1` (ADR 0005). Keep new routers
-  under `/api` so they get the same guards.
+- Login (ADR 0007): everything under `/api` except `/api/auth` needs a session; mount new routers in
+  `api-router.ts` after `requireSession` with `requirePermissions(...)`, and add them to the route list
+  in `api-router.spec.ts`. Roles are permission sets in the database; permissions live in
+  `src/shared/auth.ts`. The host allowlist and same-origin-writes check (`src/server/security.ts`,
+  ADR 0005) still apply. First sign-in `admin` / `admin` only from the server machine (or
+  `ALLOW_REMOTE_SETUP=true`, needed behind Codespaces port forwarding).
 - The build loads `server.ts` (in worker threads, without requests) to extract routes, so nothing may
   open the database or start jobs at import time; `src/server/app-services.ts` creates them lazily.
 - Browser config `src/app/app.config.ts` (router, client hydration) is merged with

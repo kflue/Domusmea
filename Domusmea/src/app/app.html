@@ -1,17 +1,23 @@
 <header class="border-b border-gray-200 bg-white">
-  <nav class="mx-auto flex max-w-5xl items-center gap-6 px-4 py-3" aria-label="Main">
+  <nav class="mx-auto flex max-w-5xl flex-wrap items-center gap-6 px-4 py-3" aria-label="Main">
     <a routerLink="/" class="text-xl font-semibold">{{ title() }}</a>
-    <a routerLink="/items" routerLinkActive="font-semibold underline" ariaCurrentWhenActive="page">
-      Appliances &amp; building parts
-    </a>
-    <a
-      routerLink="/settings"
-      routerLinkActive="font-semibold underline"
-      ariaCurrentWhenActive="page"
-      class="ml-auto"
-    >
-      Settings
-    </a>
+    @if (user(); as user) {
+      <a routerLink="/items" routerLinkActive="font-semibold underline" ariaCurrentWhenActive="page">
+        Appliances &amp; building parts
+      </a>
+      <a
+        routerLink="/settings"
+        routerLinkActive="font-semibold underline"
+        ariaCurrentWhenActive="page"
+        class="ml-auto"
+      >
+        Settings
+      </a>
+      <span class="text-sm text-gray-700">
+        Signed in as <span class="font-medium">{{ user.username }}</span>
+      </span>
+      <button type="button" class="btn-secondary" (click)="signOut()">Sign out</button>
+    }
   </nav>
 </header>
 

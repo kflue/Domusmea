@@ -1,0 +1,72 @@
+<section class="mx-auto max-w-sm">
+  <h1 class="mb-2 text-2xl font-semibold">Choose your sign-in</h1>
+  <p class="mb-6 text-gray-700">
+    Replace the default credentials with your own username and password. Afterwards,
+    <span class="font-mono">admin</span> / <span class="font-mono">admin</span> no longer works.
+  </p>
+
+  <form novalidate (submit)="save($event)" class="grid gap-5">
+    <div>
+      <label for="username" class="block font-medium">Username</label>
+      <input
+        id="username"
+        class="field"
+        autocomplete="username"
+        autocapitalize="none"
+        spellcheck="false"
+        aria-describedby="username-hint username-errors"
+        [attr.aria-invalid]="setupForm.username().touched() && setupForm.username().invalid()"
+        [formField]="setupForm.username"
+      />
+      <p id="username-hint" class="mt-1 text-sm text-gray-600">
+        3 to 32 letters, digits, “.”, “_” or “-”.
+      </p>
+      <app-field-errors errorId="username-errors" [field]="setupForm.username()" />
+    </div>
+
+    <div>
+      <label for="password" class="block font-medium">New password</label>
+      <input
+        id="password"
+        type="password"
+        class="field"
+        autocomplete="new-password"
+        aria-describedby="password-hint password-errors"
+        [attr.aria-invalid]="setupForm.password().touched() && setupForm.password().invalid()"
+        [formField]="setupForm.password"
+      />
+      <p id="password-hint" class="mt-1 text-sm text-gray-600">
+        At least {{ minPasswordLength }} characters. A few unrelated words make a good password.
+      </p>
+      <app-field-errors errorId="password-errors" [field]="setupForm.password()" />
+    </div>
+
+    <div>
+      <label for="confirmation" class="block font-medium">Repeat the password</label>
+      <input
+        id="confirmation"
+        type="password"
+        class="field"
+        autocomplete="new-password"
+        aria-describedby="confirmation-errors"
+        [attr.aria-invalid]="
+          setupForm.confirmation().touched() && setupForm.confirmation().invalid()
+        "
+        [formField]="setupForm.confirmation"
+      />
+      <app-field-errors errorId="confirmation-errors" [field]="setupForm.confirmation()" />
+    </div>
+
+    @if (error()) {
+      <p role="alert" class="rounded border border-red-300 bg-red-50 p-3 text-red-800">
+        {{ error() }}
+      </p>
+    }
+
+    <div>
+      <button type="submit" class="btn-primary" [disabled]="setupForm().submitting()">
+        Save and continue
+      </button>
+    </div>
+  </form>
+</section>

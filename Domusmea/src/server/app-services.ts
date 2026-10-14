@@ -1,5 +1,6 @@
 import { DatabaseSync } from 'node:sqlite';
 import { DEFAULT_TIME_ZONE, todayIn } from '../shared/format';
+import { AuthRepository } from './auth/auth-repository';
 import { DEFAULT_DB_PATH, openDatabase } from './db';
 import { EmailSettingsRepository } from './email/email-settings-repository';
 import { createMailer } from './email/mailer';
@@ -18,13 +19,22 @@ export const clock: Clock = {
   today: () => todayIn(timeZone),
 };
 
+/** `ALLOW_REMOTE_SETUP=true` accepts the first-run setup from other machines (ADR 0007). */
+export const allowRemoteSetup = process.env['ALLOW_REMOTE_SETUP'] === 'true';
+
 let database: DatabaseSync | undefined;
+let auth: AuthRepository | undefined;
 let items: ItemRepository | undefined;
 let emailSettings: EmailSettingsRepository | undefined;
 
 function db(): DatabaseSync {
   database ??= openDatabase(process.env['DB_PATH'] ?? DEFAULT_DB_PATH);
   return database;
+}
+
+export function authRepository(): AuthRepository {
+  auth ??= new AuthRepository(db(), clock.now);
+  return auth;
 }
 
 export function itemRepository(): ItemRepository {
