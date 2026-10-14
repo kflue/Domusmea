@@ -1,0 +1,137 @@
+<section class="mx-auto max-w-2xl">
+  <h1 class="mb-6 text-2xl font-semibold">
+    {{ isEdit() ? 'Edit journal entry' : 'New journal entry' }}
+  </h1>
+
+  @if (existing.error()) {
+    <p role="alert" class="rounded border border-red-300 bg-red-50 p-3 text-red-800">
+      This entry could not be loaded. It may have been deleted.
+      <a routerLink="/journal" class="underline">Back to the journal</a>
+    </p>
+  } @else if (isEdit() && existing.isLoading()) {
+    <p aria-live="polite">Loading…</p>
+  } @else {
+    <form novalidate (submit)="save($event)" class="grid gap-5">
+      <div class="grid gap-5 sm:grid-cols-2">
+        <div>
+          <label for="date" class="block font-medium">Date <span aria-hidden="true">*</span></label>
+          <input
+            id="date"
+            type="date"
+            class="field"
+            aria-required="true"
+            aria-describedby="date-errors"
+            [attr.aria-invalid]="entryForm.date().touched() && entryForm.date().invalid()"
+            [formField]="entryForm.date"
+          />
+          <app-field-errors errorId="date-errors" [field]="entryForm.date()" />
+        </div>
+        <div>
+          <label for="cost" class="block font-medium">Cost (CHF)</label>
+          <input
+            id="cost"
+            inputmode="decimal"
+            class="field"
+            placeholder="1299.50"
+            aria-describedby="cost-errors"
+            [attr.aria-invalid]="entryForm.cost().touched() && entryForm.cost().invalid()"
+            [formField]="entryForm.cost"
+          />
+          <app-field-errors errorId="cost-errors" [field]="entryForm.cost()" />
+        </div>
+      </div>
+
+      <fieldset>
+        <legend class="font-medium">Kind of work</legend>
+        <div class="mt-1 grid gap-2">
+          @for (kind of kinds; track kind.value) {
+            <label class="flex items-start gap-2">
+              <input
+                type="radio"
+                class="mt-1.5"
+                [value]="kind.value"
+                [attr.aria-describedby]="'kind-hint-' + kind.value"
+                [formField]="entryForm.kind"
+              />
+              <span>
+                {{ kind.label }}
+                <span [id]="'kind-hint-' + kind.value" class="block text-sm text-gray-600">
+                  {{ kind.hint }}
+                </span>
+              </span>
+            </label>
+          }
+        </div>
+      </fieldset>
+
+      <div>
+        <label for="title" class="block font-medium">
+          What was done <span aria-hidden="true">*</span>
+        </label>
+        <input
+          id="title"
+          class="field"
+          autocomplete="off"
+          placeholder="Boiler serviced"
+          aria-required="true"
+          aria-describedby="title-errors"
+          [attr.aria-invalid]="entryForm.title().touched() && entryForm.title().invalid()"
+          [formField]="entryForm.title"
+        />
+        <app-field-errors errorId="title-errors" [field]="entryForm.title()" />
+      </div>
+
+      <div class="grid gap-5 sm:grid-cols-2">
+        <div>
+          <label for="contractor" class="block font-medium">Done by</label>
+          <input
+            id="contractor"
+            class="field"
+            placeholder="Company or person"
+            aria-describedby="contractor-errors"
+            [attr.aria-invalid]="
+              entryForm.contractor().touched() && entryForm.contractor().invalid()
+            "
+            [formField]="entryForm.contractor"
+          />
+          <app-field-errors errorId="contractor-errors" [field]="entryForm.contractor()" />
+        </div>
+        <div>
+          <label for="itemId" class="block font-medium">Appliance or building part</label>
+          <select id="itemId" class="field" [formField]="entryForm.itemId">
+            <option value="">None</option>
+            @for (option of itemOptions(); track option.id) {
+              <option [value]="option.id">{{ option.name }}</option>
+            }
+          </select>
+        </div>
+      </div>
+
+      <div>
+        <label for="notes" class="block font-medium">Notes</label>
+        <textarea
+          id="notes"
+          rows="4"
+          class="field"
+          aria-describedby="notes-errors"
+          [attr.aria-invalid]="entryForm.notes().touched() && entryForm.notes().invalid()"
+          [formField]="entryForm.notes"
+        ></textarea>
+        <app-field-errors errorId="notes-errors" [field]="entryForm.notes()" />
+      </div>
+
+      @if (saveError()) {
+        <p role="alert" class="rounded border border-red-300 bg-red-50 p-3 text-red-800">
+          {{ saveError() }}
+        </p>
+      }
+
+      <div class="flex gap-3">
+        <button type="submit" class="btn-primary" [disabled]="entryForm().submitting()">
+          Save
+        </button>
+        <a routerLink="/journal" class="btn-secondary">Cancel</a>
+      </div>
+    </form>
+  }
+</section>

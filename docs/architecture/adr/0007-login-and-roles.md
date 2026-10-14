@@ -71,5 +71,8 @@ on `127.0.0.1`. The home owner wants a login before the app is opened to other d
 - A restart clears the login throttle.
 - A wrong current password on the password change answers 400 (not 401), since the session itself
   is still valid.
+- `journal:read` and `journal:write` include the names and existence of items, since entries link
+  to items. The migration grants them only to roles with the matching `items:*` permission; a role
+  that splits them later must also restrict item links.
 - Later: more users and roles, changing the username, hiding UI actions by permission, passkeys or
   2FA.

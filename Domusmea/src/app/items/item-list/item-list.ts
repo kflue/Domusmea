@@ -3,6 +3,7 @@ import { afterNextRender, Component, computed, inject, Injector, signal } from '
 import { RouterLink } from '@angular/router';
 import { formatChf, formatDate } from '../../../shared/format';
 import { Item, ITEM_CATEGORY_LABELS } from '../../../shared/item';
+import { ConfirmDelete } from '../../shared/confirm-delete';
 import { ItemsApi } from '../items-api';
 
 type WarrantyStatus = 'expired' | 'expires-today' | 'active' | 'none';
@@ -19,7 +20,7 @@ interface ItemRow {
 /** Appliances and building parts with cost and warranty status (`/items`). */
 @Component({
   selector: 'app-item-list',
-  imports: [RouterLink],
+  imports: [RouterLink, ConfirmDelete],
   templateUrl: './item-list.html',
   host: {
     // Refresh when the tab becomes visible again so "today" and the list are not stale.
@@ -46,26 +47,16 @@ export class ItemList {
     formatChf(this.rows().reduce((sum, row) => sum + (row.item.costRappen ?? 0), 0)),
   );
 
-  /** Item awaiting delete confirmation. */
-  protected readonly confirmingDelete = signal<number | undefined>(undefined);
   protected readonly deleteError = signal('');
-
-  protected askDelete(item: Item): void {
-    this.confirmingDelete.set(item.id);
-    this.focusAfterRender(`confirm-delete-${item.id}`);
-  }
-
-  protected cancelDelete(item: Item): void {
-    this.confirmingDelete.set(undefined);
-    this.focusAfterRender(`delete-${item.id}`);
-  }
 
   protected async delete(item: Item): Promise<void> {
     this.deleteError.set('');
     try {
       await this.api.delete(item.id);
-      this.confirmingDelete.set(undefined);
-      this.focusAfterRender('items-heading');
+      // The row is gone; keep keyboard focus nearby.
+      afterNextRender(() => this.document.getElementById('items-heading')?.focus(), {
+        injector: this.injector,
+      });
     } catch {
       this.deleteError.set(`“${item.name}” could not be deleted. Please try again.`);
     }
@@ -75,13 +66,6 @@ export class ItemList {
     if (this.document.visibilityState === 'visible') {
       this.list.reload();
     }
-  }
-
-  /** Keeps keyboard focus on the action area when buttons are swapped or rows disappear. */
-  private focusAfterRender(elementId: string): void {
-    afterNextRender(() => this.document.getElementById(elementId)?.focus(), {
-      injector: this.injector,
-    });
   }
 }
 
