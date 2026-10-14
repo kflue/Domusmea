@@ -1,0 +1,139 @@
+<section class="mx-auto max-w-2xl">
+  <h1 class="mb-6 text-2xl font-semibold">{{ isEdit() ? 'Edit item' : 'New item' }}</h1>
+
+  @if (existing.error()) {
+    <p role="alert" class="rounded border border-red-300 bg-red-50 p-3 text-red-800">
+      This item could not be loaded. It may have been deleted.
+      <a routerLink="/items" class="underline">Back to the list</a>
+    </p>
+  } @else if (isEdit() && existing.isLoading()) {
+    <p aria-live="polite">Loading…</p>
+  } @else {
+    <form novalidate (submit)="save($event)" class="grid gap-5">
+      <div>
+        <label for="name" class="block font-medium">Name <span aria-hidden="true">*</span></label>
+        <input
+          id="name"
+          class="field"
+          autocomplete="off"
+          aria-required="true"
+          aria-describedby="name-errors"
+          [attr.aria-invalid]="itemForm.name().touched() && itemForm.name().invalid()"
+          [formField]="itemForm.name"
+        />
+        <app-field-errors errorId="name-errors" [field]="itemForm.name()" />
+      </div>
+
+      <div>
+        <label for="category" class="block font-medium">Category</label>
+        <select id="category" class="field" [formField]="itemForm.category">
+          <option value="">Not specified</option>
+          @for (category of categories; track category.value) {
+            <option [value]="category.value">{{ category.label }}</option>
+          }
+        </select>
+      </div>
+
+      <div class="grid gap-5 sm:grid-cols-2">
+        <div>
+          <label for="purchaseDate" class="block font-medium">Purchase date</label>
+          <input id="purchaseDate" type="date" class="field" [formField]="itemForm.purchaseDate" />
+        </div>
+        <div>
+          <label for="cost" class="block font-medium">Cost (CHF)</label>
+          <input
+            id="cost"
+            inputmode="decimal"
+            class="field"
+            placeholder="1299.50"
+            aria-describedby="cost-errors"
+            [attr.aria-invalid]="itemForm.cost().touched() && itemForm.cost().invalid()"
+            [formField]="itemForm.cost"
+          />
+          <app-field-errors errorId="cost-errors" [field]="itemForm.cost()" />
+        </div>
+      </div>
+
+      <div>
+        <label for="warrantyExpires" class="block font-medium">Warranty expires</label>
+        <input
+          id="warrantyExpires"
+          type="date"
+          class="field"
+          aria-describedby="warranty-hint warrantyExpires-errors"
+          [attr.aria-invalid]="
+            itemForm.warrantyExpires().touched() && itemForm.warrantyExpires().invalid()
+          "
+          [formField]="itemForm.warrantyExpires"
+        />
+        <p id="warranty-hint" class="mt-1 text-sm text-gray-600">
+          You get an email when the warranty expires.
+        </p>
+        <app-field-errors errorId="warrantyExpires-errors" [field]="itemForm.warrantyExpires()" />
+      </div>
+
+      <div class="grid gap-5 sm:grid-cols-2">
+        <div>
+          <label for="manufacturer" class="block font-medium">Manufacturer</label>
+          <input
+            id="manufacturer"
+            class="field"
+            aria-describedby="manufacturer-errors"
+            [attr.aria-invalid]="
+              itemForm.manufacturer().touched() && itemForm.manufacturer().invalid()
+            "
+            [formField]="itemForm.manufacturer"
+          />
+          <app-field-errors errorId="manufacturer-errors" [field]="itemForm.manufacturer()" />
+        </div>
+        <div>
+          <label for="model" class="block font-medium">Model</label>
+          <input
+            id="model"
+            class="field"
+            aria-describedby="model-errors"
+            [attr.aria-invalid]="itemForm.model().touched() && itemForm.model().invalid()"
+            [formField]="itemForm.model"
+          />
+          <app-field-errors errorId="model-errors" [field]="itemForm.model()" />
+        </div>
+        <div>
+          <label for="serialNumber" class="block font-medium">Serial number</label>
+          <input
+            id="serialNumber"
+            class="field"
+            aria-describedby="serialNumber-errors"
+            [attr.aria-invalid]="
+              itemForm.serialNumber().touched() && itemForm.serialNumber().invalid()
+            "
+            [formField]="itemForm.serialNumber"
+          />
+          <app-field-errors errorId="serialNumber-errors" [field]="itemForm.serialNumber()" />
+        </div>
+        <div>
+          <label for="seller" class="block font-medium">Bought from</label>
+          <input
+            id="seller"
+            class="field"
+            placeholder="Company that sold the item"
+            aria-describedby="seller-errors"
+            [attr.aria-invalid]="itemForm.seller().touched() && itemForm.seller().invalid()"
+            [formField]="itemForm.seller"
+          />
+          <app-field-errors errorId="seller-errors" [field]="itemForm.seller()" />
+        </div>
+      </div>
+
+      @if (saveError()) {
+        <p role="alert" class="rounded border border-red-300 bg-red-50 p-3 text-red-800">
+          {{ saveError() }}
+        </p>
+      }
+
+      <div class="flex gap-3">
+        <button type="submit" class="btn-primary" [disabled]="itemForm().submitting()">Save</button>
+        <a routerLink="/items" class="btn-secondary">Cancel</a>
+      </div>
+    </form>
+  }
+</section>

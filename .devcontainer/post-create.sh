@@ -18,3 +18,12 @@ curl -fsSL -o "$SONAR_MCP_DIR/sonarqube-mcp-server.jar" \
 if [ -f Domusmea/package.json ]; then
   npm install --prefix Domusmea
 fi
+
+# Chromium for the Playwright MCP server (Debian bookworm: install libraries directly, as
+# `playwright install-deps` references font packages bookworm does not have).
+sudo apt-get update -qq
+sudo apt-get install -y -qq --no-install-recommends libnss3 libnspr4 libatk1.0-0 libatk-bridge2.0-0 \
+  libdbus-1-3 libxcomposite1 libxdamage1 libxfixes3 libxrandr2 libgbm1 libxkbcommon0 libasound2 \
+  libpango-1.0-0 libcairo2 libcups2 libdrm2 libatspi2.0-0 fonts-liberation
+mkdir -p ~/.cache/ms-playwright/.links
+npx -y -p @playwright/mcp@0.0.82 playwright install chromium
