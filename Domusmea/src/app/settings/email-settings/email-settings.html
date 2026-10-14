@@ -1,0 +1,181 @@
+<section class="mx-auto max-w-2xl">
+  <h1 class="mb-2 text-2xl font-semibold">Settings</h1>
+  <h2 class="mb-6 text-lg font-medium text-gray-700">Reminder emails</h2>
+
+  @if (saved.error()) {
+    <p role="alert" class="rounded border border-red-300 bg-red-50 p-3 text-red-800">
+      The settings could not be loaded. Please reload the page.
+    </p>
+  } @else if (!saved.hasValue()) {
+    <p aria-live="polite">Loading…</p>
+  } @else {
+    <form novalidate (submit)="save($event)" class="grid gap-5">
+      <fieldset class="grid gap-5">
+        <legend class="mb-1 font-semibold">Mail server (SMTP)</legend>
+        <p class="text-sm text-gray-600">
+          Use the outgoing mail server of your email provider. Without a server, emails are only
+          written to the server log.
+        </p>
+
+        <div class="grid gap-5 sm:grid-cols-[1fr_8rem]">
+          <div>
+            <label for="host" class="block font-medium">Server</label>
+            <input
+              id="host"
+              class="field"
+              autocomplete="off"
+              placeholder="smtp.example.ch"
+              aria-describedby="host-errors"
+              [attr.aria-invalid]="settingsForm.host().touched() && settingsForm.host().invalid()"
+              [formField]="settingsForm.host"
+            />
+            <app-field-errors errorId="host-errors" [field]="settingsForm.host()" />
+          </div>
+          <div>
+            <label for="port" class="block font-medium">Port</label>
+            <input
+              id="port"
+              inputmode="numeric"
+              class="field"
+              aria-describedby="port-errors"
+              [attr.aria-invalid]="settingsForm.port().touched() && settingsForm.port().invalid()"
+              [formField]="settingsForm.port"
+            />
+            <app-field-errors errorId="port-errors" [field]="settingsForm.port()" />
+          </div>
+        </div>
+
+        <div>
+          <label for="security" class="block font-medium">Encryption</label>
+          <select id="security" class="field" [formField]="settingsForm.security">
+            @for (mode of securityModes; track mode.value) {
+              <option [value]="mode.value">{{ mode.label }}</option>
+            }
+          </select>
+          @if (model().security === 'none') {
+            <p class="mt-1 text-sm text-amber-800">
+              Without encryption, the password and emails can be read on the network.
+            </p>
+          }
+        </div>
+
+        <div class="grid gap-5 sm:grid-cols-2">
+          <div>
+            <label for="username" class="block font-medium">User name</label>
+            <input
+              id="username"
+              class="field"
+              autocomplete="off"
+              [formField]="settingsForm.username"
+            />
+          </div>
+          <div>
+            <label for="password" class="block font-medium">Password</label>
+            <input
+              id="password"
+              type="password"
+              class="field"
+              autocomplete="new-password"
+              aria-describedby="password-hint"
+              [placeholder]="saved.value().passwordSet ? 'Saved; leave empty to keep' : ''"
+              [formField]="settingsForm.password"
+            />
+            <p id="password-hint" class="mt-1 text-sm text-gray-600">
+              @if (!saved.value().canStorePassword) {
+                A password can only be stored when SETTINGS_KEY is set on the server.
+              } @else if (dropsPassword()) {
+                <span class="text-amber-800">
+                  The server changed: enter the password again, or the saved one is removed.
+                </span>
+              } @else {
+                Stored encrypted; it is never shown again.
+              }
+            </p>
+            @if (saved.value().passwordSet) {
+              <label class="mt-2 flex items-center gap-2 text-sm">
+                <input type="checkbox" [formField]="settingsForm.removePassword" />
+                Remove the saved password
+              </label>
+            }
+          </div>
+        </div>
+
+        <div>
+          <label for="from" class="block font-medium">Sender address</label>
+          <input
+            id="from"
+            type="email"
+            class="field"
+            placeholder="home@example.ch"
+            aria-describedby="from-errors"
+            [attr.aria-invalid]="settingsForm.from().touched() && settingsForm.from().invalid()"
+            [formField]="settingsForm.from"
+          />
+          <app-field-errors errorId="from-errors" [field]="settingsForm.from()" />
+        </div>
+      </fieldset>
+
+      <div>
+        <label for="recipients" class="block font-medium">Recipients</label>
+        <textarea
+          id="recipients"
+          rows="3"
+          class="field"
+          aria-describedby="recipients-hint recipients-errors"
+          [attr.aria-invalid]="
+            settingsForm.recipients().touched() && settingsForm.recipients().invalid()
+          "
+          [formField]="settingsForm.recipients"
+        ></textarea>
+        <p id="recipients-hint" class="mt-1 text-sm text-gray-600">
+          One address per line. Without recipients, no reminder emails are sent.
+        </p>
+        <app-field-errors errorId="recipients-errors" [field]="settingsForm.recipients()" />
+      </div>
+
+      @if (saveError()) {
+        <p role="alert" class="rounded border border-red-300 bg-red-50 p-3 text-red-800">
+          {{ saveError() }}
+        </p>
+      }
+      <p role="status" class="text-green-800 empty:hidden">{{ unsaved() ? '' : saveStatus() }}</p>
+
+      <div class="flex flex-wrap items-center gap-3">
+        <button type="submit" class="btn-primary" [disabled]="settingsForm().submitting()">
+          Save
+        </button>
+        <button
+          type="button"
+          class="btn-secondary"
+          aria-describedby="test-hint"
+          [disabled]="testing() || unsaved() || !saved.value().host"
+          (click)="sendTestEmail()"
+        >
+          {{ testing() ? 'Sending…' : 'Send test email' }}
+        </button>
+        <span id="test-hint" class="text-sm text-gray-600">
+          @if (unsaved()) {
+            Save your changes before sending a test email.
+          } @else {
+            Sends a test email to the recipients.
+          }
+        </span>
+      </div>
+
+      <div aria-live="polite">
+        @if (unsaved() ? undefined : testResult(); as result) {
+          <p
+            class="rounded border p-3"
+            [class]="
+              result.ok
+                ? 'border-green-300 bg-green-50 text-green-800'
+                : 'border-red-300 bg-red-50 text-red-800'
+            "
+          >
+            {{ result.text }}
+          </p>
+        }
+      </div>
+    </form>
+  }
+</section>

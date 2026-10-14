@@ -1,0 +1,111 @@
+<section>
+  <div class="mb-6 flex flex-wrap items-center justify-between gap-3">
+    <h1 id="items-heading" tabindex="-1" class="text-2xl font-semibold">
+      Appliances &amp; building parts
+    </h1>
+    <a routerLink="/items/new" class="btn-primary">Add item</a>
+  </div>
+
+  @if (deleteError()) {
+    <p role="alert" class="mb-4 rounded border border-red-300 bg-red-50 p-3 text-red-800">
+      {{ deleteError() }}
+    </p>
+  }
+
+  @if (list.error()) {
+    <p role="alert" class="rounded border border-red-300 bg-red-50 p-3 text-red-800">
+      The items could not be loaded.
+      <button type="button" class="underline" (click)="list.reload()">Try again</button>
+    </p>
+  } @else if (!list.hasValue()) {
+    <p aria-live="polite">Loading…</p>
+  } @else if (rows().length === 0) {
+    <p class="text-gray-700">
+      No items yet. Add your appliances and building parts to keep track of costs and warranties.
+    </p>
+  } @else {
+    <div class="overflow-x-auto">
+      <table class="w-full border-collapse text-left">
+        <caption class="sr-only">
+          Appliances and building parts, sorted by warranty expiry
+        </caption>
+        <thead>
+          <tr class="border-b border-gray-300">
+            <th scope="col" class="p-2">Name</th>
+            <th scope="col" class="p-2">Category</th>
+            <th scope="col" class="p-2">Purchased</th>
+            <th scope="col" class="p-2 text-right">Cost</th>
+            <th scope="col" class="p-2">Warranty until</th>
+            <th scope="col" class="p-2"><span class="sr-only">Actions</span></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (row of rows(); track row.item.id) {
+            <tr class="border-b border-gray-200 align-top">
+              <th scope="row" class="p-2 font-medium">
+                <a [routerLink]="['/items', row.item.id]" class="underline">{{ row.item.name }}</a>
+                @if (row.item.manufacturer || row.item.model) {
+                  <span class="block text-sm font-normal text-gray-600">
+                    {{ row.item.manufacturer }} {{ row.item.model }}
+                  </span>
+                }
+              </th>
+              <td class="p-2">{{ row.category }}</td>
+              <td class="p-2 whitespace-nowrap">{{ row.purchased }}</td>
+              <td class="p-2 text-right whitespace-nowrap">{{ row.cost }}</td>
+              <td class="p-2 whitespace-nowrap">
+                {{ row.warranty }}
+                @switch (row.warrantyStatus) {
+                  @case ('expired') {
+                    <span class="badge bg-red-100 text-red-800">Expired</span>
+                  }
+                  @case ('expires-today') {
+                    <span class="badge bg-amber-100 text-amber-900">Ends today</span>
+                  }
+                }
+              </td>
+              <td class="p-2 text-right whitespace-nowrap">
+                @if (confirmingDelete() === row.item.id) {
+                  <button
+                    type="button"
+                    class="btn-danger"
+                    [id]="'confirm-delete-' + row.item.id"
+                    [attr.aria-label]="'Confirm: delete ' + row.item.name"
+                    (click)="delete(row.item)"
+                  >
+                    Confirm delete
+                  </button>
+                  <button
+                    type="button"
+                    class="btn-secondary ml-2"
+                    [attr.aria-label]="'Keep ' + row.item.name"
+                    (click)="cancelDelete(row.item)"
+                  >
+                    Cancel
+                  </button>
+                } @else {
+                  <button
+                    type="button"
+                    class="btn-secondary"
+                    [id]="'delete-' + row.item.id"
+                    [attr.aria-label]="'Delete ' + row.item.name"
+                    (click)="askDelete(row.item)"
+                  >
+                    Delete
+                  </button>
+                }
+              </td>
+            </tr>
+          }
+        </tbody>
+        <tfoot>
+          <tr class="font-semibold">
+            <th scope="row" colspan="3" class="p-2">Total</th>
+            <td class="p-2 text-right whitespace-nowrap">{{ totalCost() }}</td>
+            <td colspan="2"></td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+  }
+</section>

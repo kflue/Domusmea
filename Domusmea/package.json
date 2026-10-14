@@ -7,7 +7,8 @@
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
-    "serve:ssr:Domusmea": "node dist/Domusmea/server/server.mjs"
+    "serve:ssr:Domusmea": "node dist/Domusmea/server/server.mjs",
+    "test:server": "vitest run --config vitest.server.config.ts"
   },
   "private": true,
   "packageManager": "npm@11.19.0",
@@ -21,8 +22,10 @@
     "@angular/router": "^22.2.0",
     "@angular/ssr": "^22.2.2",
     "express": "^5.1.0",
+    "nodemailer": "10.0.10",
     "rxjs": "~7.8.0",
-    "tslib": "^2.3.0"
+    "tslib": "^2.3.0",
+    "zod": "4.6.5"
   },
   "devDependencies": {
     "@angular/build": "^22.2.2",
