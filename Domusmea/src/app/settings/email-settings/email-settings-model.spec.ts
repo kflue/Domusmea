@@ -1,6 +1,7 @@
 import { EmailSettings } from '../../../shared/email-settings';
 import {
   dropsSavedPassword,
+  isEmailAddress,
   parsePort,
   parseRecipients,
   toEmailSettingsInput,
@@ -26,6 +27,21 @@ describe('email settings form model', () => {
       'c@x.ch',
     ]);
     expect(parseRecipients('  ')).toEqual([]);
+  });
+
+  it('roughly checks email addresses', () => {
+    expect(isEmailAddress('anna@example.ch')).toBe(true);
+    for (const invalid of [
+      'anna',
+      '@example.ch',
+      'anna@example',
+      'anna@example.',
+      'a b@x.ch',
+      'a@b@x.ch',
+    ]) {
+      expect(isEmailAddress(invalid)).toBe(false);
+    }
+    expect(isEmailAddress('a@' + 'b'.repeat(50_000))).toBe(false);
   });
 
   it('accepts ports from 1 to 65535 only', () => {

@@ -12,8 +12,8 @@ import { FieldErrors } from '../../shared/field-errors';
 import { SettingsApi } from '../settings-api';
 import {
   dropsSavedPassword,
-  EMAIL_PATTERN,
   EMPTY_EMAIL_SETTINGS_FORM,
+  isEmailAddress,
   parsePort,
   parseRecipients,
   toEmailSettingsInput,
@@ -66,13 +66,13 @@ export class EmailSettingsPage {
           ? { kind: 'required', message: 'Enter the sender address.' }
           : undefined;
       }
-      return EMAIL_PATTERN.test(from)
+      return isEmailAddress(from)
         ? undefined
         : { kind: 'email', message: 'Enter an email address.' };
     });
     validate(path.recipients, ({ value }) => {
       const recipients = parseRecipients(value());
-      const invalid = recipients.filter((address) => !EMAIL_PATTERN.test(address));
+      const invalid = recipients.filter((address) => !isEmailAddress(address));
       if (invalid.length) {
         return { kind: 'email', message: `Not an email address: ${invalid.join(', ')}.` };
       }

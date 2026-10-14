@@ -30,8 +30,16 @@ export const EMPTY_EMAIL_SETTINGS_FORM: EmailSettingsFormModel = {
   recipients: '',
 };
 
-/** Rough address check; the API validates exactly. */
-export const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+/**
+ * Rough address check (`local@domain.tld`, no spaces); the API validates exactly. Plain string
+ * operations instead of a regular expression, which would backtrack on long invalid input.
+ */
+export function isEmailAddress(text: string): boolean {
+  const at = text.indexOf('@');
+  const domain = text.slice(at + 1);
+  const dot = domain.lastIndexOf('.');
+  return at > 0 && !domain.includes('@') && !/\s/.test(text) && dot > 0 && dot < domain.length - 1;
+}
 
 export function parseRecipients(text: string): string[] {
   return text.split(/[\s,;]+/).filter(Boolean);

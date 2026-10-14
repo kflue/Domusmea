@@ -31,4 +31,4 @@ sudo apt-get install -y -qq --no-install-recommends libnss3 libnspr4 libatk1.0-0
   libdbus-1-3 libxcomposite1 libxdamage1 libxfixes3 libxrandr2 libgbm1 libxkbcommon0 libasound2 \
   libpango-1.0-0 libcairo2 libcups2 libdrm2 libatspi2.0-0 fonts-liberation
 mkdir -p ~/.cache/ms-playwright/.links
-npx -y -p @playwright/mcp@0.0.82 playwright install chromium
+npx --ignore-scripts -y -p @playwright/mcp@0.0.82 playwright install chromium
