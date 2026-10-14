@@ -1,6 +1,13 @@
 import { createHash, randomBytes } from 'node:crypto';
 import { DatabaseSync } from 'node:sqlite';
-import { DEFAULT_USERNAME, Permission, PERMISSIONS, SessionUser } from '../../shared/auth';
+import {
+  DEFAULT_USERNAME,
+  MAX_SIGN_INS,
+  Permission,
+  PERMISSIONS,
+  SessionUser,
+  SignIn,
+} from '../../shared/auth';
 
 /**
  * scrypt hash of the default password `admin` (from `hashPassword`). The password is public, so a
@@ -141,6 +148,61 @@ export class AuthRepository {
 
   deleteSession(token: string): void {
     this.db.prepare('DELETE FROM sessions WHERE token_hash = ?').run(hashToken(token));
+  }
+
+  /** Ends every session of account `id` (sign out on all devices). */
+  deleteSessionsOf(id: number): void {
+    this.db.prepare('DELETE FROM sessions WHERE user_id = ?').run(id);
+  }
+
+  /** The password hash of account `id`, to check the current password before a change. */
+  passwordHash(id: number): string | undefined {
+    const row = this.db.prepare('SELECT password_hash FROM users WHERE id = ?').get(id) as
+      | { password_hash: string }
+      | undefined;
+    return row?.password_hash;
+  }
+
+  /**
+   * Replaces the password of account `id`, ends all its sessions (a stolen token stops working, even
+   * the one used for the change) and returns the token of a new session for the caller.
+   */
+  changePassword(id: number, passwordHash: string): string {
+    return this.transaction(() => {
+      this.db
+        .prepare('UPDATE users SET password_hash = ?, updated_at = ? WHERE id = ?')
+        .run(passwordHash, this.now(), id);
+      this.deleteSessionsOf(id);
+      return this.createSession(id);
+    });
+  }
+
+  /** Records a successful sign-in, keeping the newest {@link MAX_SIGN_INS} per account. */
+  recordSignIn(id: number, address: string, forwardedFor: string | null): void {
+    this.transaction(() => {
+      this.db
+        .prepare(
+          'INSERT INTO sign_ins (user_id, signed_in_at, address, forwarded_for) VALUES (?, ?, ?, ?)',
+        )
+        .run(id, this.now(), address, forwardedFor);
+      this.db
+        .prepare(
+          `DELETE FROM sign_ins WHERE user_id = ? AND id NOT IN
+             (SELECT id FROM sign_ins WHERE user_id = ? ORDER BY id DESC LIMIT ?)`,
+        )
+        .run(id, id, MAX_SIGN_INS);
+    });
+  }
+
+  /** Recent sign-ins of account `id`, newest first. */
+  recentSignIns(id: number): SignIn[] {
+    return this.db
+      .prepare(
+        `SELECT signed_in_at AS at, address, forwarded_for AS forwardedFor FROM sign_ins
+         WHERE user_id = ? ORDER BY id DESC`,
+      )
+      .all(id)
+      .map((row) => ({ ...(row as unknown as SignIn) }));
   }
 
   private createDefaultAccountIfNone(): void {

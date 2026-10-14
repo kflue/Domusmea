@@ -22,6 +22,9 @@ export const clock: Clock = {
 /** `ALLOW_REMOTE_SETUP=true` accepts the first-run setup from other machines (ADR 0007). */
 export const allowRemoteSetup = process.env['ALLOW_REMOTE_SETUP'] === 'true';
 
+/** `SECURE_COOKIES=true` always marks the session cookie `Secure`, for TLS proxies (ADR 0007). */
+export const secureCookies = process.env['SECURE_COOKIES'] === 'true';
+
 let database: DatabaseSync | undefined;
 let auth: AuthRepository | undefined;
 let items: ItemRepository | undefined;

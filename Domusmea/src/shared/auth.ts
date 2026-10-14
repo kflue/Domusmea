@@ -61,3 +61,43 @@ export type AuthError =
   | 'setup-required'
   /** The user's role lacks the permission. */
   | 'forbidden';
+
+/** A successful sign-in, as listed in Settings so the owner can spot one they did not make. */
+export interface SignIn {
+  /** ISO timestamp. */
+  at: string;
+  /** Address the server saw: the client's, or the proxy's when the request came through one. */
+  address: string;
+  /** Client address reported by the proxy (`X-Forwarded-For`); unverified, for display only. */
+  forwardedFor: string | null;
+}
+
+/** Number of sign-ins kept per account (newest first in {@link AccountInfo}). */
+export const MAX_SIGN_INS = 10;
+
+/** Body of `GET /api/account`. */
+export interface AccountInfo {
+  username: string;
+  /** Newest first; the first entry is usually the current sign-in. */
+  recentSignIns: SignIn[];
+}
+
+/** Request body of `PUT /api/account/password`. */
+export interface ChangePasswordInput {
+  currentPassword: string;
+  newPassword: string;
+}
+
+/**
+ * Why `password` cannot be a new password for `username`, as shown in the UI; `undefined` if it can.
+ * The API checks the same rules.
+ */
+export function newPasswordProblem(password: string, username: string): string | undefined {
+  if (password.length < MIN_PASSWORD_LENGTH || password.length > MAX_PASSWORD_LENGTH) {
+    return `Use ${MIN_PASSWORD_LENGTH} to ${MAX_PASSWORD_LENGTH} characters.`;
+  }
+  const lower = password.toLowerCase();
+  return lower === DEFAULT_PASSWORD || lower === username.trim().toLowerCase()
+    ? 'Choose a password that differs from the username.'
+    : undefined;
+}

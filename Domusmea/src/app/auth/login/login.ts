@@ -51,7 +51,7 @@ export class LoginPage {
           user.setupRequired ? '/setup' : safeReturnUrl(this.returnUrl()),
         );
       } catch (error) {
-        this.model.update((model) => ({ ...model, password: '' }));
+        this.loginForm.password().reset('');
         this.error.set(loginErrorText(error));
       }
     });

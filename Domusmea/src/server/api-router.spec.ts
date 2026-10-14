@@ -13,6 +13,9 @@ import { testClock } from './items/test-clock';
 
 /** One request per route of every feature router; each must require a session. */
 const PROTECTED_ROUTES = [
+  ['GET', '/account'],
+  ['PUT', '/account/password'],
+  ['POST', '/account/sign-out-everywhere'],
   ['GET', '/items'],
   ['GET', '/items/1'],
   ['POST', '/items'],
@@ -102,6 +105,7 @@ describe('API router', () => {
       ['POST', '/items'],
       ['DELETE', '/items/1'],
       ['GET', '/settings/email'],
+      ['GET', '/account'],
     ]) {
       const response = await send(method, path, cookie);
       expect(response.status, `${method} ${path}`).toBe(403);

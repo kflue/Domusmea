@@ -4,6 +4,6 @@ export const settingsRoutes: Routes = [
   {
     path: '',
     title: 'Settings · Domusmea',
-    loadComponent: () => import('./email-settings/email-settings').then((m) => m.EmailSettingsPage),
+    loadComponent: () => import('./settings-page').then((m) => m.SettingsPage),
   },
 ];

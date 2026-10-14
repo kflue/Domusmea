@@ -66,6 +66,15 @@ const MIGRATIONS: readonly string[] = [
    INSERT INTO role_permissions (role_id, permission) VALUES
      (1, 'items:read'), (1, 'items:write'), (1, 'settings:read'), (1, 'settings:write'),
      (1, 'account:manage');`,
+  // Recent successful sign-ins per account, shown in Settings (ADR 0007).
+  `CREATE TABLE sign_ins (
+     id INTEGER PRIMARY KEY,
+     user_id INTEGER NOT NULL REFERENCES users (id) ON DELETE CASCADE,
+     signed_in_at TEXT NOT NULL,
+     address TEXT NOT NULL,
+     forwarded_for TEXT
+   );
+   CREATE INDEX sign_ins_user ON sign_ins (user_id, id);`,
 ];
 
 export const DEFAULT_DB_PATH = 'data/domusmea.db';

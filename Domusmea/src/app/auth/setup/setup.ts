@@ -4,9 +4,8 @@ import { form, FormField, submit, validate } from '@angular/forms/signals';
 import { Router } from '@angular/router';
 import {
   AuthError,
-  DEFAULT_PASSWORD,
-  MAX_PASSWORD_LENGTH,
   MIN_PASSWORD_LENGTH,
+  newPasswordProblem,
   USERNAME_PATTERN,
 } from '../../../shared/auth';
 import { FieldErrors } from '../../shared/field-errors';
@@ -36,17 +35,8 @@ export class SetupPage {
         : { kind: 'username', message: 'Use 3 to 32 letters, digits, “.”, “_” or “-”.' },
     );
     validate(path.password, ({ value, valueOf }) => {
-      const password = value();
-      if (password.length < MIN_PASSWORD_LENGTH || password.length > MAX_PASSWORD_LENGTH) {
-        return {
-          kind: 'length',
-          message: `Use ${MIN_PASSWORD_LENGTH} to ${MAX_PASSWORD_LENGTH} characters.`,
-        };
-      }
-      const lower = password.toLowerCase();
-      return lower === DEFAULT_PASSWORD || lower === valueOf(path.username).trim().toLowerCase()
-        ? { kind: 'reused', message: 'Choose a password that differs from the username.' }
-        : undefined;
+      const message = newPasswordProblem(value(), valueOf(path.username));
+      return message ? { kind: 'password', message } : undefined;
     });
     validate(path.confirmation, ({ value, valueOf }) =>
       value() === valueOf(path.password)

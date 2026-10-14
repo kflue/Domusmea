@@ -1,4 +1,5 @@
 import express, { Router } from 'express';
+import { createAccountRouter } from './auth/account-router';
 import { requirePermissions, requireSession } from './auth/access-control';
 import { AuthRepository } from './auth/auth-repository';
 import { createAuthRouter } from './auth/auth-router';
@@ -16,6 +17,8 @@ export interface ApiServices {
   today: () => string;
   /** See `AuthRouterOptions.allowRemoteSetup`. */
   allowRemoteSetup: boolean;
+  /** Always mark the session cookie `Secure` (`SECURE_COOKIES=true`). */
+  secureCookies?: boolean;
   throttle?: LoginThrottle;
 }
 
@@ -26,15 +29,22 @@ export interface ApiServices {
  */
 export function createApiRouter(services: ApiServices): Router {
   const router = express.Router();
+  const { secureCookies = false, throttle = new LoginThrottle() } = services;
   router.use(
     '/auth',
     createAuthRouter(services.auth, {
       allowRemoteSetup: services.allowRemoteSetup,
-      throttle: services.throttle,
+      secureCookies,
+      throttle,
     }),
   );
 
-  router.use(requireSession(services.auth));
+  router.use(requireSession(services.auth, secureCookies));
+  router.use(
+    '/account',
+    requirePermissions({ read: 'account:manage', write: 'account:manage' }),
+    createAccountRouter(services.auth, { throttle, secureCookies }),
+  );
   router.use(
     '/items',
     requirePermissions({ read: 'items:read', write: 'items:write' }),

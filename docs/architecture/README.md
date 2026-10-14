@@ -10,6 +10,7 @@ Browser ──HTTP──▶ Express (src/server.ts)
                    ├─ /api router (src/server/api-router.ts)
                    │   ├─ /auth           ──▶ src/server/auth/  ──▶ SQLite (users, roles, sessions)
                    │   ├─ session + permission check (src/server/auth/access-control.ts)
+                   │   ├─ /account        ──▶ src/server/auth/  (sign-ins, password, sign out)
                    │   ├─ /items          ──▶ src/server/items/ ──▶ SQLite (src/server/db.ts)
                    │   └─ /settings/email ──▶ src/server/email/ ──▶ SQLite, SMTP (test email)
                    ├─ static files (dist/browser)
@@ -49,6 +50,7 @@ The SMTP server and the reminder recipients are set on the Settings page (`/sett
 | `HOST`               | `127.0.0.1`                                            | Interface of the built server; see ADR 0005 before exposing it                              |
 | `ALLOWED_HOSTS`      | none                                                   | Extra host names accepted by `/api` (comma-separated, `*.domain` allowed)                   |
 | `ALLOW_REMOTE_SETUP` | `false`                                                | `true` accepts the first-run setup from other machines (ADR 0007)                           |
+| `SECURE_COOKIES`     | `false`                                                | `true` always marks the session cookie `Secure` (TLS proxy without `X-Forwarded-Proto`)     |
 
 Everything except `/api/auth` requires a login (ADR 0007). The first sign-in is `admin` / `admin` on
 the server machine, followed by choosing your own username and password. A forgotten password is

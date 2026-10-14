@@ -10,6 +10,7 @@ import { createApiRouter } from './server/api-router';
 import {
   allowRemoteSetup,
   authRepository,
+  secureCookies,
   clock,
   emailSettingsRepository,
   itemRepository,
@@ -54,6 +55,7 @@ app.use(
     emailSettings: emailSettingsRepository,
     today: clock.today,
     allowRemoteSetup,
+    secureCookies,
   }),
 );
 

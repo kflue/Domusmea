@@ -3,6 +3,7 @@ import { AuthError, SessionResponse } from '../../shared/auth';
 import { jsonErrors, validationError } from '../api-errors';
 import {
   clearSessionCookie,
+  forwardedClient,
   isLocalRequest,
   isProxied,
   sessionToken,
@@ -20,6 +21,8 @@ export interface AuthRouterOptions {
    * the default credentials are public, so anyone on the network could otherwise claim the account.
    */
   allowRemoteSetup: boolean;
+  /** Always mark the session cookie `Secure` (`SECURE_COOKIES=true`). */
+  secureCookies?: boolean;
   throttle?: LoginThrottle;
 }
 
@@ -29,7 +32,7 @@ export interface AuthRouterOptions {
  */
 export function createAuthRouter(
   repository: () => AuthRepository,
-  { allowRemoteSetup, throttle = new LoginThrottle() }: AuthRouterOptions,
+  { allowRemoteSetup, secureCookies = false, throttle = new LoginThrottle() }: AuthRouterOptions,
 ): Router {
   const router = express.Router();
   router.use(express.json({ limit: '4kb' }));
@@ -75,7 +78,12 @@ export function createAuthRouter(
     if (previous) {
       repository().deleteSession(previous);
     }
-    setSessionCookie(req, res, repository().createSession(found.account.id));
+    repository().recordSignIn(
+      found.account.id,
+      req.socket.remoteAddress ?? 'unknown',
+      isProxied(req) ? forwardedClient(req) : null,
+    );
+    setSessionCookie(req, res, repository().createSession(found.account.id), secureCookies);
     res.json({ user: toSessionUser(found.account) } satisfies SessionResponse);
   });
 
@@ -84,7 +92,7 @@ export function createAuthRouter(
     if (token) {
       repository().deleteSession(token);
     }
-    clearSessionCookie(req, res);
+    clearSessionCookie(req, res, secureCookies);
     res.status(204).end();
   });
 
@@ -115,7 +123,7 @@ export function createAuthRouter(
       res.status(403).json({ error: 'forbidden' satisfies AuthError });
       return;
     }
-    setSessionCookie(req, res, repository().createSession(updated.id));
+    setSessionCookie(req, res, repository().createSession(updated.id), secureCookies);
     res.json({ user: toSessionUser(updated) } satisfies SessionResponse);
   });
 

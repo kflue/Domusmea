@@ -38,8 +38,17 @@ on `127.0.0.1`. The home owner wants a login before the app is opened to other d
   passwords, and both get the same 401 `invalid-credentials`.
 - **Sessions**: a random 256-bit token in the cookie `domusmea_session` (`HttpOnly`,
   `SameSite=Strict`, `Path=/`, `Secure` when the request or the proxy's `X-Forwarded-Proto` is
-  HTTPS); only its SHA-256 is stored. Sessions end after 7 days without a request. Login and setup
-  issue a new token.
+  HTTPS, or always with `SECURE_COOKIES=true` for TLS proxies that do not send that header); only
+  its SHA-256 is stored. Sessions end after 7 days without a request. Login and setup issue a new
+  token.
+- **Own account in Settings** (`/api/account`, permission `account:manage`, migration 4):
+  - the last 10 successful sign-ins per account (time, socket address, and the client address a
+    proxy reported in `X-Forwarded-For` / `X-Real-IP` if it is an IP address, shown as unverified);
+  - changing the password requires the current one (5 wrong attempts per 15 minutes per account,
+    counted apart from logins so typos cannot lock the owner out), uses the same rules as the setup,
+    ends every session of the account and signs this browser in with a new token, so a stolen token
+    stops working even if it was the one used for the change;
+  - "Sign out on all devices" ends every session of the account, this one included.
 - **Access control in one place**: `src/server/api-router.ts` mounts `/api/auth` first, then
   `requireSession`, then every feature router with `requirePermissions({ read, write })` (read for
   GET/HEAD/OPTIONS, write otherwise). A test requests every route without a session (401), with the
@@ -60,5 +69,7 @@ on `127.0.0.1`. The home owner wants a login before the app is opened to other d
 - After a fresh install or a reset, the setup must be done on the server machine (or with
   `ALLOW_REMOTE_SETUP=true`).
 - A restart clears the login throttle.
-- Deferred (P1 of the spec): changing the password in Settings, signing out everywhere, showing the
-  last sign-in. Later: more users and roles, hiding UI actions by permission, passkeys or 2FA.
+- A wrong current password on the password change answers 400 (not 401), since the session itself
+  is still valid.
+- Later: more users and roles, changing the username, hiding UI actions by permission, passkeys or
+  2FA.
