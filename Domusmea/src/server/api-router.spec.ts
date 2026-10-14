@@ -10,6 +10,7 @@ import { openDatabase } from './db';
 import { EmailSettingsRepository } from './email/email-settings-repository';
 import { ItemRepository } from './items/item-repository';
 import { testClock } from './items/test-clock';
+import { JournalRepository } from './journal/journal-repository';
 
 /** One request per route of every feature router; each must require a session. */
 const PROTECTED_ROUTES = [
@@ -21,6 +22,11 @@ const PROTECTED_ROUTES = [
   ['POST', '/items'],
   ['PUT', '/items/1'],
   ['DELETE', '/items/1'],
+  ['GET', '/journal'],
+  ['GET', '/journal/1'],
+  ['POST', '/journal'],
+  ['PUT', '/journal/1'],
+  ['DELETE', '/journal/1'],
   ['GET', '/settings/email'],
   ['PUT', '/settings/email'],
   ['POST', '/settings/email/test'],
@@ -38,12 +44,14 @@ describe('API router', () => {
     const clock = testClock('2026-10-14');
     auth = new AuthRepository(db, () => new Date().toISOString());
     const items = new ItemRepository(db, clock);
+    const journal = new JournalRepository(db, clock.now);
     const emailSettings = new EmailSettingsRepository(db, undefined, clock.now);
     const app = express().use(
       '/api',
       createApiRouter({
         auth: () => auth,
         items: () => items,
+        journal: () => journal,
         emailSettings: () => emailSettings,
         today: clock.today,
         allowRemoteSetup: false,
@@ -89,6 +97,7 @@ describe('API router', () => {
     auth.completeSetup(1, 'anna', await hashPassword('a long kitchen password'));
     const cookie = sessionCookie(1);
     expect((await send('POST', '/items', cookie)).status).toBe(201);
+    expect((await send('GET', '/journal', cookie)).status).toBe(200);
     expect((await send('GET', '/settings/email', cookie)).status).toBe(200);
     expect((await send('GET', '/unknown', cookie)).status).toBe(404);
   });
@@ -104,6 +113,7 @@ describe('API router', () => {
     for (const [method, path] of [
       ['POST', '/items'],
       ['DELETE', '/items/1'],
+      ['GET', '/journal'],
       ['GET', '/settings/email'],
       ['GET', '/account'],
     ]) {

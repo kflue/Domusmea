@@ -39,16 +39,17 @@
 
     <form novalidate (submit)="changePassword($event)" class="grid gap-5">
       <h3 class="font-semibold">Change password</h3>
-      <!-- Lets password managers store the new password for the right account. -->
-      <input
-        type="text"
-        class="hidden"
-        autocomplete="username"
-        aria-hidden="true"
-        tabindex="-1"
-        readonly
-        [value]="account.value().username"
-      />
+      <!-- Lets password managers store the new password for the right account; not displayed. -->
+      <div class="hidden">
+        <label for="account-username">Username</label>
+        <input
+          id="account-username"
+          type="text"
+          autocomplete="username"
+          readonly
+          [value]="account.value().username"
+        />
+      </div>
       <div>
         <label for="current-password" class="block font-medium">Current password</label>
         <input
