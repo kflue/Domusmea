@@ -40,6 +40,7 @@ Rules:
   `server.ts` only mounts that router.
 - Each Angular feature with a page of its own registers a side-navigation topic: a `NavTopic` in
   `app/<feature>/<feature>.nav.ts`, added with `provideNavTopic(...)` in `app.config.ts` (ADR 0008).
+  Cost features set its `group` to `'capex'` or `'opex'` (ADR 0015).
 - Features with costs register a finance source in `app/<feature>/<feature>.finance.ts`, added
   with `provideFinanceSource(...)` in `app.config.ts`; its figures come from a pure function in
   `shared/` (ADR 0013).
@@ -83,5 +84,6 @@ reset with `npm run reset-login` (after `npm run build`), which brings back `adm
 | [0012](adr/0012-utility-comparisons-and-bill-notes.md) | Like-for-like year comparison, monthly utility cost, notes per bill       |
 | [0013](adr/0013-finance-dashboard-and-sources.md)      | Finance dashboard at `/finance`; cost categories registered as sources    |
 | [0014](adr/0014-investments-on-finance-dashboard.md)   | Investments by year: planned = future-dated, category of the linked item  |
+| [0015](adr/0015-navigation-groups.md)                  | Side navigation grouped into capex and opex, Finance on top               |
 
 New decisions get the next number; superseded ADRs stay and are marked as such.

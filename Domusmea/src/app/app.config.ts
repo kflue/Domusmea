@@ -20,10 +20,10 @@ export const appConfig: ApplicationConfig = {
     provideRouter(routes, withComponentInputBinding()),
     provideClientHydration(),
     provideHttpClient(withInterceptors([authInterceptor])),
-    // Side navigation, in this order (ADR 0008).
+    // Side navigation, in this order: ungrouped first, then each group (ADR 0008, 0015).
+    provideNavTopic(financeNavTopic),
     provideNavTopic(itemsNavTopic),
     provideNavTopic(journalNavTopic),
-    provideNavTopic(financeNavTopic),
     provideNavTopic(utilitiesNavTopic),
     // Cost categories of the finance dashboard (ADR 0013).
     provideFinanceSource(subscriptionsFinanceSource),
