@@ -2,11 +2,12 @@ import { Component, computed, inject } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import { AuthApi } from '../auth/auth-api';
 import { NavPreferences } from './nav-preferences';
-import { NAV_TOPICS } from './nav-topics';
+import { NAV_GROUP_LABELS, NAV_TOPICS, NavGroup, NavTopic } from './nav-topics';
 
 /**
- * The main navigation: the topics registered with `provideNavTopic` that the user may see. A
- * sidebar (or icon rail) on wide screens, a drawer on narrow ones; see `NavPreferences`.
+ * The main navigation: the topics registered with `provideNavTopic` that the user may see,
+ * ungrouped ones first, then each group under its subtitle (ADR 0015). A sidebar (or icon rail)
+ * on wide screens, a drawer on narrow ones; see `NavPreferences`.
  */
 @Component({
   selector: 'app-side-nav',
@@ -29,32 +30,45 @@ import { NAV_TOPICS } from './nav-topics';
         class="overflow-y-auto border-r border-gray-200 bg-white p-2"
         [class]="placement()"
       >
-        <ul class="flex flex-col gap-1">
-          @for (topic of topics(); track topic.path) {
-            <li>
-              <a
-                [routerLink]="topic.path"
-                routerLinkActive="bg-gray-100 font-semibold"
-                ariaCurrentWhenActive="page"
-                class="flex items-center gap-3 rounded px-3 py-2 hover:bg-gray-100"
-                [attr.title]="showLabels() ? null : topic.label"
-                (click)="prefs.closeDrawer()"
-              >
-                <svg
-                  aria-hidden="true"
-                  class="size-6 shrink-0"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="1.5"
-                >
-                  <path stroke-linecap="round" stroke-linejoin="round" [attr.d]="topic.icon" />
-                </svg>
-                <span [class.sr-only]="!showLabels()">{{ topic.label }}</span>
-              </a>
-            </li>
+        @for (section of sections(); track section.id) {
+          @if (section.label) {
+            <h2
+              [id]="'nav-group-' + section.id"
+              class="mt-3 border-t border-gray-200 px-3 pt-3 pb-1 text-xs font-semibold tracking-wide text-gray-500 uppercase"
+            >
+              <span [class.sr-only]="!showLabels()">{{ section.label }}</span>
+            </h2>
           }
-        </ul>
+          <ul
+            class="flex flex-col gap-1"
+            [attr.aria-labelledby]="section.label ? 'nav-group-' + section.id : null"
+          >
+            @for (topic of section.topics; track topic.path) {
+              <li>
+                <a
+                  [routerLink]="topic.path"
+                  routerLinkActive="bg-gray-100 font-semibold"
+                  ariaCurrentWhenActive="page"
+                  class="flex items-center gap-3 rounded px-3 py-2 hover:bg-gray-100"
+                  [attr.title]="showLabels() ? null : topic.label"
+                  (click)="prefs.closeDrawer()"
+                >
+                  <svg
+                    aria-hidden="true"
+                    class="size-6 shrink-0"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.5"
+                  >
+                    <path stroke-linecap="round" stroke-linejoin="round" [attr.d]="topic.icon" />
+                  </svg>
+                  <span [class.sr-only]="!showLabels()">{{ topic.label }}</span>
+                </a>
+              </li>
+            }
+          </ul>
+        }
       </nav>
     }
   `,
@@ -64,9 +78,26 @@ export class SideNav {
   private readonly allTopics = inject(NAV_TOPICS, { optional: true }) ?? [];
   protected readonly prefs = inject(NavPreferences);
 
-  protected readonly topics = computed(() => {
+  /**
+   * The visible topics in sections: the ungrouped ones, then one per group in the order its first
+   * topic was registered. Groups without a visible topic are left out, subtitle included.
+   */
+  protected readonly sections = computed(() => {
     const permissions = this.auth.activeUser()?.permissions ?? [];
-    return this.allTopics.filter((topic) => permissions.includes(topic.permission));
+    const byGroup = new Map<NavGroup | '', NavTopic[]>([['', []]]);
+    for (const topic of this.allTopics) {
+      if (permissions.includes(topic.permission)) {
+        const group = topic.group ?? '';
+        byGroup.set(group, [...(byGroup.get(group) ?? []), topic]);
+      }
+    }
+    return [...byGroup]
+      .filter(([, topics]) => topics.length > 0)
+      .map(([group, topics]) => ({
+        id: group || 'top',
+        label: group ? NAV_GROUP_LABELS[group] : '',
+        topics,
+      }));
   });
 
   /** Sidebar beside the page (below the sticky top bar), or drawer over it. */
