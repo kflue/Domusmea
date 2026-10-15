@@ -21,12 +21,12 @@ Browser ──HTTP──▶ Express (src/server.ts)
 
 ## Source layout (`Domusmea/src/`)
 
-| Path        | Runs on       | Contents                                                                         |
-| ----------- | ------------- | -------------------------------------------------------------------------------- |
-| `app/`      | browser + SSR | Angular application; one folder per feature (`app/items/`)                       |
-| `server/`   | Node only     | API routers, repositories, database, background jobs                             |
-| `shared/`   | both          | Types and constants used by the API and the frontend; no Node or Angular imports |
-| `server.ts` | Node only     | Express app: mounts API routers, starts jobs, serves Angular                     |
+| Path        | Runs on       | Contents                                                                                 |
+| ----------- | ------------- | ---------------------------------------------------------------------------------------- |
+| `app/`      | browser + SSR | Angular application; one folder per feature (`app/items/`), page layout in `app/layout/` |
+| `server/`   | Node only     | API routers, repositories, database, background jobs                                     |
+| `shared/`   | both          | Types and constants used by the API and the frontend; no Node or Angular imports         |
+| `server.ts` | Node only     | Express app: mounts API routers, starts jobs, serves Angular                             |
 
 Rules:
 
@@ -35,6 +35,8 @@ Rules:
 - Each API feature has a repository (SQL only) and a router (HTTP, validation). Routers are mounted
   in `server/api-router.ts`, after the session check and with the permissions they need (ADR 0007).
   `server.ts` only mounts that router.
+- Each Angular feature with a page of its own registers a side-navigation topic: a `NavTopic` in
+  `app/<feature>/<feature>.nav.ts`, added with `provideNavTopic(...)` in `app.config.ts` (ADR 0008).
 - Feature routes in Angular are lazy-loaded. Routes showing database data use
   `RenderMode.Client` in `app.routes.server.ts`, because the `'**'` default prerenders at build time.
 
@@ -68,5 +70,6 @@ reset with `npm run reset-login` (after `npm run build`), which brings back `adm
 | [0005](adr/0005-no-login-network-safeguards.md)   | No login yet; host allowlist, local binding and other API safeguards |
 | [0006](adr/0006-email-settings-in-database.md)    | SMTP server and recipients set in the UI, password encrypted         |
 | [0007](adr/0007-login-and-roles.md)               | Login with one owner account, roles as permission sets               |
+| [0008](adr/0008-side-navigation.md)               | Collapsible side navigation, topics registered per feature           |
 
 New decisions get the next number; superseded ADRs stay and are marked as such.

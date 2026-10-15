@@ -4,6 +4,9 @@ import { routes } from './app.routes';
 import { provideClientHydration } from '@angular/platform-browser';
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { authInterceptor } from './auth/auth-guards';
+import { itemsNavTopic } from './items/items.nav';
+import { journalNavTopic } from './journal/journal.nav';
+import { provideNavTopic } from './layout/nav-topics';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -11,5 +14,8 @@ export const appConfig: ApplicationConfig = {
     provideRouter(routes, withComponentInputBinding()),
     provideClientHydration(),
     provideHttpClient(withInterceptors([authInterceptor])),
+    // Side navigation, in this order (ADR 0008).
+    provideNavTopic(itemsNavTopic),
+    provideNavTopic(journalNavTopic),
   ],
 };
