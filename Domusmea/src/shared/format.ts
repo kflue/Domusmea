@@ -41,6 +41,33 @@ export function formatPercentChange(percent: number): string {
   return percentChangeFormat.format(percent / 100);
 }
 
+const shareFormat = new Intl.NumberFormat('de-CH', { style: 'percent', maximumFractionDigits: 0 });
+
+/** A share of a whole, given as 0–1, in whole percent: `0.7019` → `70%`. */
+export function formatShare(share: number): string {
+  return shareFormat.format(share);
+}
+
+const MONTH_NAMES = [
+  'Jan',
+  'Feb',
+  'Mar',
+  'Apr',
+  'May',
+  'Jun',
+  'Jul',
+  'Aug',
+  'Sep',
+  'Oct',
+  'Nov',
+  'Dec',
+];
+
+/** Formats a calendar month `YYYY-MM` (or a date) as `Mar 2026`, without going through `Date`. */
+export function formatMonth(month: string): string {
+  return `${MONTH_NAMES[Number(month.slice(5, 7)) - 1]} ${month.slice(0, 4)}`;
+}
+
 /** Formats a `YYYY-MM-DD` date as `DD.MM.YYYY` without going through `Date` (no time zone shifts). */
 export function formatDate(isoDate: string): string {
   const [year, month, day] = isoDate.split('-');

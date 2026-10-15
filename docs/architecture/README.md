@@ -40,6 +40,9 @@ Rules:
   `server.ts` only mounts that router.
 - Each Angular feature with a page of its own registers a side-navigation topic: a `NavTopic` in
   `app/<feature>/<feature>.nav.ts`, added with `provideNavTopic(...)` in `app.config.ts` (ADR 0008).
+- Features with costs register a finance source in `app/<feature>/<feature>.finance.ts`, added
+  with `provideFinanceSource(...)` in `app.config.ts`; its figures come from a pure function in
+  `shared/` (ADR 0013).
 - Feature routes in Angular are lazy-loaded. Routes showing database data use
   `RenderMode.Client` in `app.routes.server.ts`, because the `'**'` default prerenders at build time.
 
@@ -78,5 +81,6 @@ reset with `npm run reset-login` (after `npm run build`), which brings back `adm
 | [0010](adr/0010-cancellation-reminders.md)             | Email reminder a third of the notice period before cancellation deadlines |
 | [0011](adr/0011-utility-bills-and-charts.md)           | Utility bills per commodity; charts with Chart.js, loaded lazily          |
 | [0012](adr/0012-utility-comparisons-and-bill-notes.md) | Like-for-like year comparison, monthly utility cost, notes per bill       |
+| [0013](adr/0013-finance-dashboard-and-sources.md)      | Finance dashboard at `/finance`; cost categories registered as sources    |
 
 New decisions get the next number; superseded ADRs stay and are marked as such.

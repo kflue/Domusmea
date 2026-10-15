@@ -3,7 +3,7 @@ import { inject, Service } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 import { UtilityBillInput, UtilityEntry, UtilityEntryInput } from '../../shared/utility';
 
-const UTILITIES_URL = '/api/utilities';
+export const UTILITIES_URL = '/api/utilities';
 
 /** Access to `/api/utilities`. `list` is the shared list of all entries; mutations reload it. */
 @Service()

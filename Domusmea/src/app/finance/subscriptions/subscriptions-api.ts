@@ -3,7 +3,7 @@ import { inject, Service } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 import { Subscription, SubscriptionInput } from '../../../shared/subscription';
 
-const SUBSCRIPTIONS_URL = '/api/subscriptions';
+export const SUBSCRIPTIONS_URL = '/api/subscriptions';
 
 /** Access to `/api/subscriptions`. `list` is the shared list by name; mutations reload it. */
 @Service()

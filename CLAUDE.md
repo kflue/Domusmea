@@ -77,7 +77,7 @@ Workflow rules).
   `src/shared/format.ts`.
 - Finance area `/finance` (ADR 0009): subscriptions at `/finance/subscriptions`, API
   `/api/subscriptions` (`finance:*` permissions). Billings, price history and cost totals are
-  computed by `src/shared/subscription-costs.ts`; reuse it for the finance dashboard. Cancellation
+  computed by `src/shared/subscription-costs.ts`. Cancellation
   deadlines and the hourly reminder email: `src/shared/cancellation.ts`, ADR 0010. Background jobs use
   `startPeriodicCheck` (`src/server/periodic-check.ts`).
 - Energy & utilities `/utilities` (ADR 0011): quarterly bills, one entry per commodity, API
@@ -86,6 +86,12 @@ Workflow rules).
   its `paidRappen` (ADR 0012). Charts use Chart.js, imported only through `CHART_FACTORY`
   (`utility-chart/`) so it stays a lazy, browser-only chunk. Hide write controls with
   `AuthApi.can(...)` and guard form routes with `permissionGuard(...)`.
+- Finance dashboard `/finance` (ADR 0013): it only combines _finance sources_. To add a cost
+  category, write a pure function returning `OpexFigures` (`src/shared/finance-totals.ts`) in
+  `src/shared/`, a `<feature>.finance.ts` whose `load` uses `import()` for everything but types, and
+  one `provideFinanceSource(...)` line in `app.config.ts`. Chart.js is registered only in
+  `app/shared/chart-js.ts`; charts load it through a factory token (`CHART_FACTORY`,
+  `COST_CHART_FACTORY`).
 
 ## Dev environment
 
