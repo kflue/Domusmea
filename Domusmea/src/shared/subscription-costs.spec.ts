@@ -151,10 +151,20 @@ describe('monthlyShareIn and subscriptionOpex', () => {
     expect(monthlyShareIn(annual, '2027-04')).toBe(0);
   });
 
-  it('uses the price in effect on the first day of the month', () => {
+  it('counts a price change in full from the month it takes effect', () => {
     const raised = { ...netflix, priceChanges: [{ validFrom: '2026-03-15', costRappen: 2_190 }] };
-    expect(monthlyShareIn(raised, '2026-03')).toBe(1_890);
+    expect(monthlyShareIn(raised, '2026-02')).toBe(1_890);
+    expect(monthlyShareIn(raised, '2026-03')).toBe(2_190);
     expect(monthlyShareIn(raised, '2026-04')).toBe(2_190);
+  });
+
+  it('ignores a price change after the end date', () => {
+    const cancelled = {
+      ...netflix,
+      endDate: '2026-03-10',
+      priceChanges: [{ validFrom: '2026-03-15', costRappen: 2_190 }],
+    };
+    expect(monthlyShareIn(cancelled, '2026-03')).toBe(1_890);
   });
 
   it('returns the current monthly total and a value per month from the first start', () => {
