@@ -1,9 +1,12 @@
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
+import { OpexFigures } from '../../../shared/finance-totals';
+import { JournalEntry } from '../../../shared/journal';
 import { Subscription } from '../../../shared/subscription';
 import { UtilityEntry } from '../../../shared/utility';
 import { subscriptionsFinanceSource } from '../subscriptions/subscriptions.finance';
+import { journalFinanceSource } from '../../journal/journal.finance';
 import { utilitiesFinanceSource } from '../../utilities/utilities.finance';
 import { FINANCE_SOURCES, provideFinanceSource } from './finance-sources';
 
@@ -17,6 +20,7 @@ describe('finance sources', () => {
         provideHttpClientTesting(),
         provideFinanceSource(subscriptionsFinanceSource),
         provideFinanceSource(utilitiesFinanceSource),
+        provideFinanceSource(journalFinanceSource),
       ],
     });
     http = TestBed.inject(HttpTestingController);
@@ -32,6 +36,7 @@ describe('finance sources', () => {
     expect(sources.map((s) => [s.id, s.kind, s.link])).toEqual([
       ['subscriptions', 'opex', '/finance/subscriptions'],
       ['utilities', 'opex', '/utilities'],
+      ['journal', 'capex', '/journal'],
     ]);
     http.expectNone('/api/subscriptions');
   });
@@ -66,7 +71,33 @@ describe('finance sources', () => {
       fixedFeeRappen: 6_000,
     };
     http.expectOne('/api/utilities').flush([bill]);
-    const { monthly } = await figures;
+    const { monthly } = (await figures) as OpexFigures;
     expect(monthly).toEqual({ '2026-07': 2_000, '2026-08': 2_000, '2026-09': 2_000 });
+  });
+
+  it('load the investments, as "Other" without permission to read the items', async () => {
+    const journal = TestBed.inject(FINANCE_SOURCES)[2];
+    const figures = journal.load('2026-10-15');
+    await settle();
+    const investment: Partial<JournalEntry> = {
+      date: '2027-03-01',
+      kind: 'investment',
+      costRappen: 900_000,
+      itemId: 4,
+    };
+    http.expectOne('/api/journal').flush([investment]);
+    http.expectNone('/api/items');
+    expect(await figures).toEqual({
+      years: [
+        {
+          year: '2027',
+          category: 'other',
+          categoryLabel: 'Other',
+          spentRappen: 0,
+          plannedRappen: 900_000,
+        },
+      ],
+      notes: [],
+    });
   });
 });

@@ -82,5 +82,6 @@ reset with `npm run reset-login` (after `npm run build`), which brings back `adm
 | [0011](adr/0011-utility-bills-and-charts.md)           | Utility bills per commodity; charts with Chart.js, loaded lazily          |
 | [0012](adr/0012-utility-comparisons-and-bill-notes.md) | Like-for-like year comparison, monthly utility cost, notes per bill       |
 | [0013](adr/0013-finance-dashboard-and-sources.md)      | Finance dashboard at `/finance`; cost categories registered as sources    |
+| [0014](adr/0014-investments-on-finance-dashboard.md)   | Investments by year: planned = future-dated, category of the linked item  |
 
 New decisions get the next number; superseded ADRs stay and are marked as such.

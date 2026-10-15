@@ -1,6 +1,6 @@
 import { InjectionToken, Provider } from '@angular/core';
 import { Permission } from '../../../shared/auth';
-import { OpexFigures } from '../../../shared/finance-totals';
+import { CapexFigures, OpexFigures } from '../../../shared/finance-totals';
 
 /** What every cost source of the finance dashboard declares (ADR 0013). */
 export interface FinanceSourceBase {
@@ -26,7 +26,17 @@ export interface OpexSource extends FinanceSourceBase {
   load: (today: string) => Promise<OpexFigures>;
 }
 
-export type FinanceSource = OpexSource;
+/**
+ * Investments (capital expenditure). A source may report several categories (R6); a new capex
+ * category is a new category within a source, or a new source for data outside the journal.
+ */
+export interface CapexSource extends FinanceSourceBase {
+  kind: 'capex';
+  /** Loads the investments; entries dated after `today` count as planned. */
+  load: (today: string) => Promise<CapexFigures>;
+}
+
+export type FinanceSource = OpexSource | CapexSource;
 
 /** All registered sources, in the order of their `provideFinanceSource` calls. */
 export const FINANCE_SOURCES = new InjectionToken<readonly FinanceSource[]>('FINANCE_SOURCES');

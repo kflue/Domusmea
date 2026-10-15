@@ -3,7 +3,7 @@ import { inject, Service } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 import { Item, ItemInput, ItemList } from '../../shared/item';
 
-const ITEMS_URL = '/api/items';
+export const ITEMS_URL = '/api/items';
 
 /** Access to `/api/items`. `list` is the shared item list; mutations reload it. */
 @Service()

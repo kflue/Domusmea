@@ -1,0 +1,76 @@
+<section class="mb-10" aria-labelledby="investments-heading">
+  <h2 id="investments-heading" class="mb-3 text-xl font-semibold">Investments per year</h2>
+
+  @if (capex.error()) {
+    <p role="alert" class="rounded border border-red-300 bg-red-50 p-3 text-red-800">
+      The investments could not be loaded.
+      <button type="button" class="underline" (click)="capex.reload()">Try again</button>
+    </p>
+  } @else if (!capex.hasValue()) {
+    <p aria-live="polite">Loading…</p>
+  } @else {
+    @for (source of failed(); track source.id) {
+      <p role="alert" class="mb-4 rounded border border-red-300 bg-red-50 p-3 text-red-800">
+        {{ source.label }} could not be loaded and are left out of the totals.
+        <button type="button" class="underline" (click)="capex.reload()">Try again</button>
+      </p>
+    }
+
+    @if (isEmpty()) {
+      <p class="text-gray-700">
+        No investments with a cost yet. Record past and planned investments, with a date in the
+        future for plans, to budget the coming years:
+      </p>
+      <ul class="mt-2 list-disc pl-6">
+        @for (source of sources(); track source.id) {
+          <li>
+            <a class="text-blue-700 underline" [routerLink]="source.link">{{ source.label }}</a>
+          </li>
+        }
+      </ul>
+    } @else {
+      <dl class="mb-2 flex flex-wrap gap-x-8 gap-y-4">
+        <div>
+          <dt class="text-sm text-gray-600">{{ summary().year }}</dt>
+          <dd class="text-2xl font-semibold whitespace-nowrap">{{ summary().total }}</dd>
+          <dd class="text-sm text-gray-600">
+            {{ summary().spent }} spent, {{ summary().planned }} planned
+          </dd>
+        </div>
+        <div>
+          <dt class="text-sm text-gray-600">Planned {{ summary().nextYears }}</dt>
+          <dd class="text-lg font-semibold whitespace-nowrap">
+            {{ summary().nextYearsPlanned }}
+          </dd>
+        </div>
+      </dl>
+      <p class="mb-6 text-sm text-gray-600">
+        @for (source of sources(); track source.id) {
+          <a class="text-blue-700 underline" [routerLink]="source.link">{{ source.label }}</a>
+          @if (!$last) {
+            ·
+          }
+        }
+        @for (note of notes(); track note) {
+          · {{ note }}
+        }
+      </p>
+
+      <app-cost-chart
+        class="mb-4 block"
+        [data]="chart()"
+        label="Investments per year, a line per category; planned years are dashed with hollow points. The table below lists the same figures."
+      />
+      <app-cost-table
+        [data]="chart()"
+        summary="Figures per year"
+        caption="Investments per year and category, newest first; planned years are marked"
+        periodHeader="Year"
+      />
+      <p class="text-sm text-gray-600">
+        Investments dated after today count as planned; once their date has passed they count as
+        spent. They are grouped by the category of the appliance or building part they belong to.
+      </p>
+    }
+  }
+</section>

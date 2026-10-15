@@ -3,7 +3,7 @@ import { inject, Service } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 import { JournalEntry, JournalEntryInput } from '../../shared/journal';
 
-const JOURNAL_URL = '/api/journal';
+export const JOURNAL_URL = '/api/journal';
 
 /** Access to `/api/journal`. `list` is the shared journal, newest first; mutations reload it. */
 @Service()

@@ -1,5 +1,14 @@
 import { describe, expect, it } from 'vitest';
-import { lastMonths, monthRange, mrcSummary, OpexCategory, opexChart } from './finance-totals';
+import {
+  capexChart,
+  capexSummary,
+  CapexYear,
+  lastMonths,
+  monthRange,
+  mrcSummary,
+  OpexCategory,
+  opexChart,
+} from './finance-totals';
 
 const category = (
   id: string,
@@ -73,5 +82,60 @@ describe('opexChart', () => {
     expect(chart.categories.map((series) => series.id)).toEqual(['subscriptions']);
     expect(chart.total).toEqual([null, null, 1_000]);
     expect(opexChart([], months).total).toEqual([null, null, null]);
+  });
+});
+
+const capex = (
+  year: string,
+  category: string,
+  spentRappen: number,
+  plannedRappen = 0,
+): CapexYear => ({ year, category, categoryLabel: category, spentRappen, plannedRappen });
+
+describe('capexSummary', () => {
+  it('splits the current year into spent and planned and sums the next five years (R4)', () => {
+    const summary = capexSummary(
+      [
+        capex('2025', 'a', 500_000),
+        capex('2026', 'a', 1_800_000, 1_200_000),
+        capex('2027', 'b', 0, 300_000),
+        capex('2031', 'a', 0, 100_000),
+        capex('2032', 'a', 0, 999_999),
+      ],
+      '2026-10-15',
+    );
+    expect(summary).toEqual({
+      year: '2026',
+      spentRappen: 1_800_000,
+      plannedRappen: 1_200_000,
+      nextYears: { from: '2027', to: '2031', plannedRappen: 400_000 },
+    });
+  });
+});
+
+describe('capexChart', () => {
+  it('runs from the first investment to the last planned year, missing years as 0 (R5)', () => {
+    const chart = capexChart(
+      [capex('2024', 'a', 100), capex('2026', 'b', 200, 300), capex('2028', 'a', 0, 400)],
+      '2026-10-15',
+    );
+    expect(chart.years).toEqual(['2024', '2025', '2026', '2027', '2028']);
+    expect(chart.categories.map((s) => [s.id, s.values])).toEqual([
+      ['a', [100, 0, 0, 0, 400]],
+      ['b', [0, 0, 500, 0, 0]],
+    ]);
+    expect(chart.total.values).toEqual([100, 0, 500, 0, 400]);
+    expect(chart.total.spent[2]).toBe(200);
+    expect(chart.total.planned[2]).toBe(300);
+    expect(chart.currentIndex).toBe(2);
+    expect(chart.plannedFrom).toBe(3);
+  });
+
+  it('shows at most ten past years and always the current year', () => {
+    const chart = capexChart([capex('2001', 'a', 100), capex('2020', 'a', 100)], '2026-10-15');
+    expect(chart.years[0]).toBe('2016');
+    expect(chart.years.at(-1)).toBe('2026');
+    expect(chart.plannedFrom).toBe(chart.years.length);
+    expect(capexChart([], '2026-10-15').years).toEqual(['2026']);
   });
 });
