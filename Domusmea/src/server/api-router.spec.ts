@@ -12,6 +12,7 @@ import { ItemRepository } from './items/item-repository';
 import { testClock } from './items/test-clock';
 import { JournalRepository } from './journal/journal-repository';
 import { SubscriptionRepository } from './subscriptions/subscription-repository';
+import { UtilityRepository } from './utilities/utility-repository';
 
 /** One request per route of every feature router; each must require a session. */
 const PROTECTED_ROUTES = [
@@ -33,6 +34,11 @@ const PROTECTED_ROUTES = [
   ['POST', '/subscriptions'],
   ['PUT', '/subscriptions/1'],
   ['DELETE', '/subscriptions/1'],
+  ['GET', '/utilities'],
+  ['GET', '/utilities/1'],
+  ['POST', '/utilities'],
+  ['PUT', '/utilities/1'],
+  ['DELETE', '/utilities/1'],
   ['GET', '/settings/email'],
   ['PUT', '/settings/email'],
   ['POST', '/settings/email/test'],
@@ -52,6 +58,7 @@ describe('API router', () => {
     const items = new ItemRepository(db, clock);
     const journal = new JournalRepository(db, clock.now);
     const subscriptions = new SubscriptionRepository(db, clock.now);
+    const utilities = new UtilityRepository(db, clock.now);
     const emailSettings = new EmailSettingsRepository(db, undefined, clock.now);
     const app = express().use(
       '/api',
@@ -60,6 +67,7 @@ describe('API router', () => {
         items: () => items,
         journal: () => journal,
         subscriptions: () => subscriptions,
+        utilities: () => utilities,
         emailSettings: () => emailSettings,
         today: clock.today,
         allowRemoteSetup: false,
@@ -107,6 +115,7 @@ describe('API router', () => {
     expect((await send('POST', '/items', cookie)).status).toBe(201);
     expect((await send('GET', '/journal', cookie)).status).toBe(200);
     expect((await send('GET', '/subscriptions', cookie)).status).toBe(200);
+    expect((await send('GET', '/utilities', cookie)).status).toBe(200);
     expect((await send('GET', '/settings/email', cookie)).status).toBe(200);
     expect((await send('GET', '/unknown', cookie)).status).toBe(404);
   });
@@ -124,8 +133,28 @@ describe('API router', () => {
       ['DELETE', '/items/1'],
       ['GET', '/journal'],
       ['GET', '/subscriptions'],
+      ['GET', '/utilities'],
       ['GET', '/settings/email'],
       ['GET', '/account'],
+    ]) {
+      const response = await send(method, path, cookie);
+      expect(response.status, `${method} ${path}`).toBe(403);
+      expect(await response.json()).toEqual({ error: 'forbidden' });
+    }
+  });
+
+  it('lets a finance:read role view utility bills but not change them', async () => {
+    auth.completeSetup(1, 'anna', await hashPassword('a long kitchen password'));
+    db.exec(`INSERT INTO roles (id, name) VALUES (2, 'Household');
+      INSERT INTO role_permissions (role_id, permission) VALUES (2, 'finance:read');
+      UPDATE users SET role_id = 2;`);
+    const cookie = sessionCookie(1);
+
+    expect((await send('GET', '/utilities', cookie)).status).toBe(200);
+    for (const [method, path] of [
+      ['POST', '/utilities'],
+      ['PUT', '/utilities/1'],
+      ['DELETE', '/utilities/1'],
     ]) {
       const response = await send(method, path, cookie);
       expect(response.status, `${method} ${path}`).toBe(403);

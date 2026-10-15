@@ -118,6 +118,30 @@ const MIGRATIONS: readonly string[] = [
      SELECT role_id, 'finance:read' FROM role_permissions WHERE permission = 'journal:read';
    INSERT INTO role_permissions (role_id, permission)
      SELECT role_id, 'finance:write' FROM role_permissions WHERE permission = 'journal:write';`,
+  // Utility bills (ADR 0011, 0012): a bill holds the invoice number and notes, its entries one
+  // commodity and billing period each; guarded by the finance permissions. The commodity is a string
+  // key without CHECK so new ones need no migration.
+  `CREATE TABLE utility_bills (
+     id INTEGER PRIMARY KEY,
+     invoice_number TEXT,
+     notes TEXT,
+     created_at TEXT NOT NULL,
+     updated_at TEXT NOT NULL
+   );
+   CREATE TABLE utility_entries (
+     id INTEGER PRIMARY KEY,
+     bill_id INTEGER NOT NULL REFERENCES utility_bills (id) ON DELETE CASCADE,
+     commodity TEXT NOT NULL,
+     period_from TEXT NOT NULL,
+     period_to TEXT NOT NULL CHECK (period_to >= period_from),
+     amount_milli INTEGER CHECK (amount_milli BETWEEN 0 AND 1000000000),
+     cost_rappen INTEGER NOT NULL CHECK (cost_rappen BETWEEN -100000000 AND 100000000),
+     fixed_fee_rappen INTEGER NOT NULL CHECK (fixed_fee_rappen BETWEEN -100000000 AND 100000000),
+     created_at TEXT NOT NULL,
+     updated_at TEXT NOT NULL
+   );
+   CREATE INDEX utility_entries_commodity ON utility_entries (commodity, period_to);
+   CREATE INDEX utility_entries_bill ON utility_entries (bill_id);`,
 ];
 
 export const DEFAULT_DB_PATH = 'data/domusmea.db';

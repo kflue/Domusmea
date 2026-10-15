@@ -1,0 +1,195 @@
+<section class="mx-auto max-w-3xl">
+  <h1 class="mb-6 text-2xl font-semibold">
+    {{ isEdit() ? 'Edit bill entry' : 'New bill' }}
+  </h1>
+
+  @if (list.error()) {
+    <p role="alert" class="rounded border border-red-300 bg-red-50 p-3 text-red-800">
+      The utility bills could not be loaded.
+      <button type="button" class="underline" (click)="list.reload()">Try again</button>
+    </p>
+  } @else if (!list.hasValue()) {
+    <p aria-live="polite">Loading…</p>
+  } @else if (isEdit() && !existing()) {
+    <p role="alert" class="rounded border border-red-300 bg-red-50 p-3 text-red-800">
+      This entry could not be found. It may have been deleted.
+      <a routerLink="/utilities" class="underline">Back to energy &amp; utilities</a>
+    </p>
+  } @else {
+    <form novalidate (submit)="save($event)" class="grid gap-6">
+      <fieldset>
+        <legend class="font-medium">Billing period</legend>
+        <div class="mt-1 grid gap-5 sm:grid-cols-2">
+          <div>
+            <label for="periodFrom" class="block">From <span aria-hidden="true">*</span></label>
+            <input
+              id="periodFrom"
+              type="date"
+              class="field"
+              aria-required="true"
+              aria-describedby="periodFrom-errors"
+              [attr.aria-invalid]="
+                billForm.periodFrom().touched() && billForm.periodFrom().invalid()
+              "
+              [formField]="billForm.periodFrom"
+            />
+            <app-field-errors errorId="periodFrom-errors" [field]="billForm.periodFrom()" />
+          </div>
+          <div>
+            <label for="periodTo" class="block">To <span aria-hidden="true">*</span></label>
+            <input
+              id="periodTo"
+              type="date"
+              class="field"
+              aria-required="true"
+              aria-describedby="periodTo-errors"
+              [attr.aria-invalid]="billForm.periodTo().touched() && billForm.periodTo().invalid()"
+              [formField]="billForm.periodTo"
+            />
+            <app-field-errors errorId="periodTo-errors" [field]="billForm.periodTo()" />
+          </div>
+        </div>
+      </fieldset>
+
+      <div class="grid gap-5 sm:grid-cols-[1fr_2fr]">
+        <div>
+          <label for="invoiceNumber" class="block font-medium">Invoice number</label>
+          <input
+            id="invoiceNumber"
+            class="field"
+            autocomplete="off"
+            aria-describedby="invoiceNumber-errors"
+            [attr.aria-invalid]="
+              billForm.invoiceNumber().touched() && billForm.invoiceNumber().invalid()
+            "
+            [formField]="billForm.invoiceNumber"
+          />
+          <app-field-errors errorId="invoiceNumber-errors" [field]="billForm.invoiceNumber()" />
+        </div>
+        <div>
+          <label for="notes" class="block font-medium">Notes</label>
+          <textarea
+            id="notes"
+            rows="2"
+            class="field"
+            aria-describedby="notes-hint notes-errors"
+            [attr.aria-invalid]="billForm.notes().touched() && billForm.notes().invalid()"
+            [formField]="billForm.notes"
+          ></textarea>
+          <p id="notes-hint" class="mt-1 text-sm text-gray-600">
+            @if (isEdit()) {
+              Invoice number and notes belong to the bill; they change for all of its entries.
+            } @else {
+              E.g. where the PDF is filed, or why the period is irregular.
+            }
+          </p>
+          <app-field-errors errorId="notes-errors" [field]="billForm.notes()" />
+        </div>
+      </div>
+
+      @if (!isEdit()) {
+        <p id="lines-hint" class="-mb-2 text-sm text-gray-600">
+          Fill in the commodities on the bill and leave the others empty. Enter a credit as a
+          negative cost, e.g. -12.50.
+        </p>
+      }
+
+      @for (commodity of commodities(); track commodity) {
+        @let line = billForm.lines[commodity];
+        @let unit = info[commodity].unit;
+        <fieldset class="rounded border border-gray-300 p-4">
+          <legend class="px-1 font-medium">
+            {{ info[commodity].label }}{{ unit ? ' (' + unit + ')' : ' (flat fee)' }}
+          </legend>
+          <div class="grid gap-4 sm:grid-cols-3">
+            @if (unit) {
+              <div>
+                <label [for]="commodity + '-amount'" class="block text-sm font-medium">
+                  Amount ({{ unit }})
+                </label>
+                <input
+                  inputmode="decimal"
+                  class="field"
+                  [id]="commodity + '-amount'"
+                  [attr.aria-describedby]="commodity + '-amount-errors'"
+                  [attr.aria-invalid]="line.amount().touched() && line.amount().invalid()"
+                  [formField]="line.amount"
+                />
+                <app-field-errors
+                  [errorId]="commodity + '-amount-errors'"
+                  [field]="line.amount()"
+                />
+              </div>
+              <div>
+                <label [for]="commodity + '-cost'" class="block text-sm font-medium">
+                  Usage cost (CHF)
+                </label>
+                <input
+                  inputmode="decimal"
+                  class="field"
+                  [id]="commodity + '-cost'"
+                  [attr.aria-describedby]="commodity + '-cost-errors'"
+                  [attr.aria-invalid]="line.cost().touched() && line.cost().invalid()"
+                  [formField]="line.cost"
+                />
+                <app-field-errors [errorId]="commodity + '-cost-errors'" [field]="line.cost()" />
+              </div>
+            }
+            @if (info[commodity].hasFixedFee) {
+              <div>
+                <label [for]="commodity + '-fixedFee'" class="block text-sm font-medium">
+                  {{ unit ? 'Fixed fee (CHF)' : 'Flat fee (CHF)' }}
+                </label>
+                <input
+                  inputmode="decimal"
+                  class="field"
+                  [id]="commodity + '-fixedFee'"
+                  [attr.aria-describedby]="commodity + '-fixedFee-errors'"
+                  [attr.aria-invalid]="line.fixedFee().touched() && line.fixedFee().invalid()"
+                  [formField]="line.fixedFee"
+                />
+                <app-field-errors
+                  [errorId]="commodity + '-fixedFee-errors'"
+                  [field]="line.fixedFee()"
+                />
+              </div>
+            }
+          </div>
+        </fieldset>
+      }
+      <app-field-errors errorId="lines-errors" [field]="billForm.lines()" />
+
+      @if (overlaps().length) {
+        <div class="rounded border border-amber-400 bg-amber-50 p-3 text-amber-900" role="status">
+          <p class="font-medium">This period overlaps entries you already have:</p>
+          <ul class="ml-5 list-disc">
+            @for (overlap of overlaps(); track overlap) {
+              <li>{{ overlap }}</li>
+            }
+          </ul>
+          <label class="mt-2 flex items-center gap-2">
+            <input
+              id="confirmOverlap"
+              type="checkbox"
+              aria-describedby="confirmOverlap-errors"
+              [formField]="billForm.confirmOverlap"
+            />
+            Save anyway (e.g. a final bill)
+          </label>
+          <app-field-errors errorId="confirmOverlap-errors" [field]="billForm.confirmOverlap()" />
+        </div>
+      }
+
+      @if (saveError()) {
+        <p role="alert" class="rounded border border-red-300 bg-red-50 p-3 text-red-800">
+          {{ saveError() }}
+        </p>
+      }
+
+      <div class="flex gap-3">
+        <button type="submit" class="btn-primary" [disabled]="billForm().submitting()">Save</button>
+        <a routerLink="/utilities" class="btn-secondary">Cancel</a>
+      </div>
+    </form>
+  }
+</section>

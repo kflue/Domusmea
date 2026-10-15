@@ -17,6 +17,7 @@ import {
   journalRepository,
   startBackgroundJobs,
   subscriptionRepository,
+  utilityRepository,
 } from './server/app-services';
 import {
   allowedHostMatcher,
@@ -56,6 +57,7 @@ app.use(
     items: itemRepository,
     journal: journalRepository,
     subscriptions: subscriptionRepository,
+    utilities: utilityRepository,
     emailSettings: emailSettingsRepository,
     today: clock.today,
     allowRemoteSetup,

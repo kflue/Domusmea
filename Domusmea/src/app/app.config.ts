@@ -8,6 +8,7 @@ import { financeNavTopic } from './finance/finance.nav';
 import { itemsNavTopic } from './items/items.nav';
 import { journalNavTopic } from './journal/journal.nav';
 import { provideNavTopic } from './layout/nav-topics';
+import { utilitiesNavTopic } from './utilities/utilities.nav';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -19,5 +20,6 @@ export const appConfig: ApplicationConfig = {
     provideNavTopic(itemsNavTopic),
     provideNavTopic(journalNavTopic),
     provideNavTopic(financeNavTopic),
+    provideNavTopic(utilitiesNavTopic),
   ],
 };

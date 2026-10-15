@@ -2,7 +2,7 @@ import { HttpErrorResponse, HttpInterceptorFn } from '@angular/common/http';
 import { inject } from '@angular/core';
 import { CanActivateFn, Router } from '@angular/router';
 import { catchError, throwError } from 'rxjs';
-import { AuthError } from '../../shared/auth';
+import { AuthError, Permission } from '../../shared/auth';
 import { AuthApi } from './auth-api';
 
 /** Pages with household data: signed-out visitors go to the login, then back here. */
@@ -14,6 +14,18 @@ export const signedInGuard: CanActivateFn = async (_route, state) => {
   }
   return user.setupRequired ? router.createUrlTree(['/setup']) : true;
 };
+
+/**
+ * Pages that need `permission`, such as forms that change data; others go to the start page. Use
+ * after {@link signedInGuard}.
+ */
+export function permissionGuard(permission: Permission): CanActivateFn {
+  return async () => {
+    const router = inject(Router);
+    const user = await inject(AuthApi).currentUser();
+    return user?.permissions.includes(permission) ? true : router.createUrlTree(['/']);
+  };
+}
 
 /** The first-run setup: only while signed in with the default credentials. */
 export const setupGuard: CanActivateFn = async () => {

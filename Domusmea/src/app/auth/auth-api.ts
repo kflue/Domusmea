@@ -1,7 +1,13 @@
 import { HttpClient } from '@angular/common/http';
 import { computed, inject, Service, signal } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
-import { LoginInput, SessionResponse, SessionUser, SetupInput } from '../../shared/auth';
+import {
+  LoginInput,
+  Permission,
+  SessionResponse,
+  SessionUser,
+  SetupInput,
+} from '../../shared/auth';
 
 const AUTH_URL = '/api/auth';
 
@@ -21,6 +27,14 @@ export class AuthApi {
     const user = this.current();
     return user && !user.setupRequired ? user : undefined;
   });
+
+  /**
+   * Whether the active user's role has `permission`, e.g. to hide controls the API would reject.
+   * Reactive when read in a template or `computed`.
+   */
+  can(permission: Permission): boolean {
+    return this.activeUser()?.permissions.includes(permission) ?? false;
+  }
 
   /** The signed-in user, asking the server only the first time. */
   async currentUser(): Promise<SessionUser | null> {

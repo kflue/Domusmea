@@ -1,4 +1,4 @@
-import { parseChf, rappenToChfText } from './chf-input';
+import { parseChf, parseSignedChf, rappenToChfText } from './chf-input';
 
 describe('parseChf', () => {
   it('parses amounts with Swiss separators into Rappen', () => {
@@ -18,9 +18,22 @@ describe('parseChf', () => {
   });
 });
 
+describe('parseSignedChf', () => {
+  it('accepts credits with a leading minus', () => {
+    expect(parseSignedChf('-12.50')).toBe(-1250);
+    expect(parseSignedChf(' - 1’000 ')).toBe(-100000);
+    expect(parseSignedChf('12.50')).toBe(1250);
+    expect(parseSignedChf('')).toBeNull();
+    expect(parseSignedChf('-')).toBeUndefined();
+    expect(parseSignedChf('--1')).toBeUndefined();
+  });
+});
+
 describe('rappenToChfText', () => {
   it('formats Rappen as an editable amount', () => {
     expect(rappenToChfText(129950)).toBe('1299.50');
     expect(rappenToChfText(5)).toBe('0.05');
+    expect(rappenToChfText(-50)).toBe('-0.50');
+    expect(rappenToChfText(-129905)).toBe('-1299.05');
   });
 });
