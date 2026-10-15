@@ -29,8 +29,9 @@ require changes to the dashboard.
   their page; utilities the cost of the last twelve billed months ÷ 12 (ADR 0012). The total is the
   sum of the exact amounts, rounded once.
 - **Cost per month** for the chart, last 24 months up to the current one: subscriptions by the
-  monthly share of every subscription running in that month at the price in effect on the first day
-  it runs there (`monthlyShareIn`), so an annual billing is no spike; utilities by `paidRappen` for
+  full monthly share of every subscription running in that month at the price in effect on the last
+  day it runs there (`monthlyShareIn`), so a price change shows in the month it takes effect and an
+  annual billing is no spike; utilities by `paidRappen` for
   each month a bill covers. A month a source does not cover (a bill not entered yet, months before
   the first subscription) has no value: the chart shows a gap, never 0, and the total is drawn only
   for months every drawn category covers. A total line appears once there are two categories.
@@ -51,7 +52,8 @@ require changes to the dashboard.
 - Each source loads its full list once per dashboard visit, separately from its feature's
   `httpResource`; with a few hundred rows this is cheaper than a server aggregation endpoint.
 - A subscription counts a full monthly share in its first and last month even if it runs only part
-  of them, and a price change counts from the following month; both are close enough for a trend.
+  of them, and a price change counts in full for the month it takes effect; the chart shows the
+  trend, the subscriptions page the exact billings.
 - The initial bundle grows by about 2 kB raw (1.5 kB transferred), mostly from esbuild re-splitting
   shared chunks; the dashboard is a 10 kB lazy chunk and Chart.js remains one lazy chunk.
 - Rejected: a server-side dashboard endpoint (duplicates the shared functions, no data volume to

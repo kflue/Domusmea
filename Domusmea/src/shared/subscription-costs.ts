@@ -92,8 +92,9 @@ export function monthlyTotalRappen(
 
 /**
  * Monthly share of `terms` in the calendar month `month` (`YYYY-MM`) for the finance chart
- * (ADR 0013): the price in effect on the first day it runs that month, annual prices divided by 12,
- * so an annual billing is no spike. 0 in months it does not run at all. Unrounded.
+ * (ADR 0013): a full monthly share at the price in effect on the last day it runs that month, so a
+ * price change shows in the month it takes effect; annual prices divided by 12, so an annual billing
+ * is no spike. 0 in months it does not run at all. Unrounded.
  */
 export function monthlyShareIn(terms: SubscriptionTerms, month: string): number {
   const first = `${month}-01`;
@@ -101,7 +102,10 @@ export function monthlyShareIn(terms: SubscriptionTerms, month: string): number 
   if (terms.startDate > last || (terms.endDate !== null && terms.endDate < first)) {
     return 0;
   }
-  const price = priceOn(terms, terms.startDate > first ? terms.startDate : first);
+  const price = priceOn(
+    terms,
+    terms.endDate !== null && terms.endDate < last ? terms.endDate : last,
+  );
   return terms.interval === 'monthly' ? price : price / 12;
 }
 
