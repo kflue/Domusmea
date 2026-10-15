@@ -1,3 +1,5 @@
+[![Quality gate status](https://sonarcloud.io/api/project_badges/measure?project=kflue_Domusmea&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=kflue_Domusmea)
+
 # Domusmea
 
 lat. for my home. A home management software for home owners. This project uses AI.
