@@ -26,6 +26,11 @@ export const routes: Routes = [
     loadChildren: () => import('./journal/journal.routes').then((m) => m.journalRoutes),
   },
   {
+    path: 'finance',
+    canActivate: [signedInGuard],
+    loadChildren: () => import('./finance/finance.routes').then((m) => m.financeRoutes),
+  },
+  {
     path: 'settings',
     canActivate: [signedInGuard],
     loadChildren: () => import('./settings/settings.routes').then((m) => m.settingsRoutes),

@@ -11,6 +11,7 @@ import { EmailSettingsRepository } from './email/email-settings-repository';
 import { ItemRepository } from './items/item-repository';
 import { testClock } from './items/test-clock';
 import { JournalRepository } from './journal/journal-repository';
+import { SubscriptionRepository } from './subscriptions/subscription-repository';
 
 /** One request per route of every feature router; each must require a session. */
 const PROTECTED_ROUTES = [
@@ -27,6 +28,11 @@ const PROTECTED_ROUTES = [
   ['POST', '/journal'],
   ['PUT', '/journal/1'],
   ['DELETE', '/journal/1'],
+  ['GET', '/subscriptions'],
+  ['GET', '/subscriptions/1'],
+  ['POST', '/subscriptions'],
+  ['PUT', '/subscriptions/1'],
+  ['DELETE', '/subscriptions/1'],
   ['GET', '/settings/email'],
   ['PUT', '/settings/email'],
   ['POST', '/settings/email/test'],
@@ -45,6 +51,7 @@ describe('API router', () => {
     auth = new AuthRepository(db, () => new Date().toISOString());
     const items = new ItemRepository(db, clock);
     const journal = new JournalRepository(db, clock.now);
+    const subscriptions = new SubscriptionRepository(db, clock.now);
     const emailSettings = new EmailSettingsRepository(db, undefined, clock.now);
     const app = express().use(
       '/api',
@@ -52,6 +59,7 @@ describe('API router', () => {
         auth: () => auth,
         items: () => items,
         journal: () => journal,
+        subscriptions: () => subscriptions,
         emailSettings: () => emailSettings,
         today: clock.today,
         allowRemoteSetup: false,
@@ -98,6 +106,7 @@ describe('API router', () => {
     const cookie = sessionCookie(1);
     expect((await send('POST', '/items', cookie)).status).toBe(201);
     expect((await send('GET', '/journal', cookie)).status).toBe(200);
+    expect((await send('GET', '/subscriptions', cookie)).status).toBe(200);
     expect((await send('GET', '/settings/email', cookie)).status).toBe(200);
     expect((await send('GET', '/unknown', cookie)).status).toBe(404);
   });
@@ -114,6 +123,7 @@ describe('API router', () => {
       ['POST', '/items'],
       ['DELETE', '/items/1'],
       ['GET', '/journal'],
+      ['GET', '/subscriptions'],
       ['GET', '/settings/email'],
       ['GET', '/account'],
     ]) {

@@ -7,6 +7,8 @@ import { createMailer } from './email/mailer';
 import { secretBoxFromEnv } from './email/secret-box';
 import { Clock, ItemRepository } from './items/item-repository';
 import { JournalRepository } from './journal/journal-repository';
+import { startCancellationReminder } from './subscriptions/cancellation-reminder';
+import { SubscriptionRepository } from './subscriptions/subscription-repository';
 import { startWarrantyNotifier } from './warranty/warranty-notifier';
 
 /**
@@ -30,6 +32,7 @@ let database: DatabaseSync | undefined;
 let auth: AuthRepository | undefined;
 let items: ItemRepository | undefined;
 let journal: JournalRepository | undefined;
+let subscriptions: SubscriptionRepository | undefined;
 let emailSettings: EmailSettingsRepository | undefined;
 
 function db(): DatabaseSync {
@@ -52,6 +55,11 @@ export function journalRepository(): JournalRepository {
   return journal;
 }
 
+export function subscriptionRepository(): SubscriptionRepository {
+  subscriptions ??= new SubscriptionRepository(db(), clock.now);
+  return subscriptions;
+}
+
 export function emailSettingsRepository(): EmailSettingsRepository {
   emailSettings ??= new EmailSettingsRepository(
     db(),
@@ -71,12 +79,13 @@ export function startBackgroundJobs(): void {
     return;
   }
   global[JOBS_STARTED] = true;
-  startWarrantyNotifier({
-    repository: itemRepository,
+  const email = {
     recipients: () => emailSettingsRepository().get().recipients,
     mailer: () => createMailer(emailSettingsRepository().mailConfig().smtp),
     today: clock.today,
-  });
+  };
+  startWarrantyNotifier({ ...email, repository: itemRepository });
+  startCancellationReminder({ ...email, repository: subscriptionRepository });
 }
 
 /** `APP_TIMEZONE` if it is a valid IANA time zone, otherwise the default (logged). */

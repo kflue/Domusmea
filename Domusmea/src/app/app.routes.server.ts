@@ -9,6 +9,8 @@ export const serverRoutes: ServerRoute[] = [
   { path: 'items/**', renderMode: RenderMode.Client },
   { path: 'journal', renderMode: RenderMode.Client },
   { path: 'journal/**', renderMode: RenderMode.Client },
+  { path: 'finance', renderMode: RenderMode.Client },
+  { path: 'finance/**', renderMode: RenderMode.Client },
   { path: 'settings', renderMode: RenderMode.Client },
   { path: '**', renderMode: RenderMode.Prerender },
 ];

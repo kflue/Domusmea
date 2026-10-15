@@ -2,6 +2,7 @@ import { formatChf, formatDate } from '../../shared/format';
 import { Item, ITEM_CATEGORY_LABELS } from '../../shared/item';
 import { ItemRepository } from '../items/item-repository';
 import { Mail, Mailer } from '../email/mailer';
+import { startPeriodicCheck } from '../periodic-check';
 
 export interface WarrantyNotifierDeps {
   repository: () => ItemRepository;
@@ -94,35 +95,7 @@ function describe(item: Item): string {
   ].join('\n');
 }
 
-const HOUR_MS = 60 * 60 * 1000;
-
-/**
- * Runs the check now and then every `intervalMs`, never overlapping. Returns a function that stops
- * the timer. The timer does not keep the process alive.
- */
-export function startWarrantyNotifier(
-  deps: WarrantyNotifierDeps,
-  intervalMs = HOUR_MS,
-): () => void {
-  let running = false;
-  const run = async () => {
-    if (running) {
-      return;
-    }
-    running = true;
-    try {
-      const count = await notifyExpiredWarranties(deps);
-      if (count > 0) {
-        console.log(`Warranty email sent for ${count} item(s).`);
-      }
-    } catch (error) {
-      console.error('Warranty check failed; retrying at the next check.', error);
-    } finally {
-      running = false;
-    }
-  };
-  void run();
-  const timer = setInterval(() => void run(), intervalMs);
-  timer.unref();
-  return () => clearInterval(timer);
+/** Checks for expired warranties now and then hourly (ADR 0003). Returns a function that stops it. */
+export function startWarrantyNotifier(deps: WarrantyNotifierDeps): () => void {
+  return startPeriodicCheck('Warranty check', () => notifyExpiredWarranties(deps));
 }
