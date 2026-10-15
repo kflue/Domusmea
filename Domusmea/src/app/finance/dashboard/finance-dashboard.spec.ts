@@ -4,13 +4,15 @@ import { Component, input } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { Permission, SessionUser } from '../../../shared/auth';
-import { lastMonths, OpexFigures } from '../../../shared/finance-totals';
+import { CapexFigures, lastMonths, OpexFigures } from '../../../shared/finance-totals';
 import { DEFAULT_TIME_ZONE, todayIn } from '../../../shared/format';
 import { AuthApi } from '../../auth/auth-api';
 import { CostChart } from './cost-chart/cost-chart';
 import { CostChartData } from './cost-chart/cost-chart-config';
 import { FinanceDashboard } from './finance-dashboard';
 import { FinanceSource, provideFinanceSource } from './finance-sources';
+import { Investments } from './investments/investments';
+import { RunningCosts } from './running-costs/running-costs';
 
 /** Stands in for the canvas chart, which jsdom cannot draw. */
 @Component({ selector: 'app-cost-chart', template: '' })
@@ -19,7 +21,9 @@ class FakeChart {
   readonly label = input.required<string>();
 }
 
-const months = lastMonths(todayIn(DEFAULT_TIME_ZONE), 24);
+const today = todayIn(DEFAULT_TIME_ZONE);
+const months = lastMonths(today, 24);
+const year = Number(today.slice(0, 4));
 const current = months[23];
 const previous = months[22];
 
@@ -53,6 +57,34 @@ const taxes = opex('taxes', 30, { currentMonthlyRappen: 50_000, monthly: { [curr
 const empty = (id: string, order: number) =>
   opex(id, order, { currentMonthlyRappen: 0, monthly: {} });
 
+function capex(id: string, figures: CapexFigures | Error): () => FinanceSource {
+  return () => ({
+    kind: 'capex',
+    id,
+    label: 'Investments',
+    permission: 'journal:read',
+    link: '/journal',
+    order: 10,
+    load: () => (figures instanceof Error ? Promise.reject(figures) : Promise.resolve(figures)),
+  });
+}
+
+const row = (offset: number, category: string, spentRappen: number, plannedRappen = 0) => ({
+  year: String(year + offset),
+  category,
+  categoryLabel: category[0].toUpperCase() + category.slice(1),
+  spentRappen,
+  plannedRappen,
+});
+const journal = capex('journal', {
+  years: [
+    row(-1, 'appliance', 500_000),
+    row(0, 'other', 1_800_000, 1_200_000),
+    row(2, 'appliance', 0, 300_000),
+  ],
+  notes: ['3 investments without cost'],
+});
+
 describe('FinanceDashboard', () => {
   let http: HttpTestingController;
 
@@ -65,10 +97,12 @@ describe('FinanceDashboard', () => {
         ...sources.map(provideFinanceSource),
       ],
     });
-    TestBed.overrideComponent(FinanceDashboard, {
-      remove: { imports: [CostChart] },
-      add: { imports: [FakeChart] },
-    });
+    for (const section of [RunningCosts, Investments]) {
+      TestBed.overrideComponent(section, {
+        remove: { imports: [CostChart] },
+        add: { imports: [FakeChart] },
+      });
+    }
     http = TestBed.inject(HttpTestingController);
   }
 
@@ -91,12 +125,20 @@ describe('FinanceDashboard', () => {
     document.body.appendChild(fixture.nativeElement);
     await fixture.whenStable();
     const element = fixture.nativeElement as HTMLElement;
-    const chart = () => fixture.debugElement.query((d) => d.name === 'app-cost-chart');
+    const section = (name: string) => element.querySelector<HTMLElement>(name);
+    const chartIn = (name: string) =>
+      (
+        fixture.debugElement
+          .query((d) => d.name === name)
+          ?.query((d) => d.name === 'app-cost-chart')?.componentInstance as FakeChart | undefined
+      )?.data();
     return {
       element,
-      chartData: () => (chart()?.componentInstance as FakeChart | undefined)?.data(),
-      kpis: () =>
-        [...element.querySelectorAll('dl > div')].map((div) =>
+      section,
+      chartData: () => chartIn('app-running-costs'),
+      capexData: () => chartIn('app-investments'),
+      kpis: (name = 'app-running-costs') =>
+        [...(section(name)?.querySelectorAll('dl > div') ?? [])].map((div) =>
           [...div.children]
             .map((part) => part.textContent)
             .join(' ')
@@ -135,6 +177,7 @@ describe('FinanceDashboard', () => {
     );
     expect(rows).toHaveLength(24);
     expect(rows[0]).toEqual([data.periods[23], '85.00', '–', '–']);
+    expect(element.querySelector('app-investments')).toBeNull();
     expect(rows[1]).toEqual([data.periods[22], '80.00', '210.00', '290.00']);
   });
 
@@ -176,5 +219,55 @@ describe('FinanceDashboard', () => {
       '/utilities',
     ]);
     expect(chartData()).toBeUndefined();
+  });
+
+  it('shows this year spent and planned and the plan for the next five years (R4)', async () => {
+    setup([subscriptions, journal]);
+    const { section, kpis } = await render(['finance:read', 'journal:read']);
+    expect(kpis('app-investments')).toEqual([
+      expect.stringMatching(
+        new RegExp(
+          `^${year} CHF\\s30.000\\.00 CHF\\s18.000\\.00 spent, CHF\\s12.000\\.00 planned$`,
+        ),
+      ),
+      expect.stringMatching(new RegExp(`^Planned ${year + 1}–${year + 5} CHF\\s3.000\\.00$`)),
+    ]);
+    expect(section('app-investments')?.textContent).toContain('3 investments without cost');
+  });
+
+  it('draws past and planned years per category, the current year split (R5)', async () => {
+    setup([journal]);
+    const { capexData } = await render(['finance:read', 'journal:read']);
+    const data = capexData()!;
+    expect(data.periods).toEqual([
+      String(year - 1),
+      String(year),
+      String(year + 1),
+      String(year + 2),
+    ]);
+    expect(data.plannedFrom).toBe(2);
+    expect(data.series.map((s) => [s.label, s.values])).toEqual([
+      ['Appliance', [500_000, 0, 0, 300_000]],
+      ['Other', [0, 3_000_000, 0, 0]],
+      ['Total', [500_000, 3_000_000, 0, 300_000]],
+    ]);
+    expect(data.series[1].details?.[1]).toMatch(/^CHF\s18.000\.00 spent, CHF\s12.000\.00 planned$/);
+  });
+
+  it('hides the investments without journal:read (story 8)', async () => {
+    setup([subscriptions, journal]);
+    const { element, kpis } = await render(['finance:read']);
+    expect(element.querySelector('app-investments')).toBeNull();
+    expect(kpis()[0]).toMatch(/CHF\s85\.00$/);
+  });
+
+  it('explains the investments without any and reports a failing capex source', async () => {
+    setup([capex('journal', { years: [], notes: [] }), capex('vehicles', new Error('offline'))]);
+    const { section } = await render(['finance:read', 'journal:read']);
+    const investments = section('app-investments')!;
+    expect(investments.textContent).toContain('No investments with a cost yet');
+    expect(investments.querySelector('[role="alert"]')?.textContent).toContain(
+      'could not be loaded',
+    );
   });
 });

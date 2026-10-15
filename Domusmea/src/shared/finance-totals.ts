@@ -42,7 +42,8 @@ export interface MrcSummary {
     id: string;
     label: string;
     rappen: number;
-    /** 0–1 of the total. */ share: number;
+    /** 0–1 of the total. */
+    share: number;
   }[];
 }
 
@@ -93,4 +94,112 @@ export function opexChart(
       : null;
   });
   return { months: [...months], categories: drawn, total };
+}
+
+/** Investments of one capex category in one calendar year, split by today's date (R4). */
+export interface CapexYear {
+  /** `YYYY`. */
+  year: string;
+  /** Category key, unique within its source, e.g. `appliance`. */
+  category: string;
+  categoryLabel: string;
+  /** Dated up to today. */
+  spentRappen: number;
+  /** Dated after today. */
+  plannedRappen: number;
+}
+
+/** Figures of a capex source: investments per year and category (R4–R6). */
+export interface CapexFigures {
+  /** One row per category and year that has investments; categories in legend order. */
+  years: CapexYear[];
+  /** Remarks shown under the tile, e.g. `3 investments without cost`. */
+  notes: string[];
+}
+
+/** The investments tile (R4). */
+export interface CapexSummary {
+  /** The current year, `YYYY`. */
+  year: string;
+  spentRappen: number;
+  plannedRappen: number;
+  /** Planned in the five years after the current one. */
+  nextYears: { from: string; to: string; plannedRappen: number };
+}
+
+/** Number of years after the current one that the tile sums up. */
+export const PLANNED_YEARS = 5;
+
+export function capexSummary(rows: readonly CapexYear[], today: string): CapexSummary {
+  const year = Number(today.slice(0, 4));
+  const sum = (filter: (row: CapexYear) => boolean, amount: (row: CapexYear) => number) =>
+    rows.filter(filter).reduce((total, row) => total + amount(row), 0);
+  const isCurrent = (row: CapexYear) => Number(row.year) === year;
+  const isNext = (row: CapexYear) =>
+    Number(row.year) > year && Number(row.year) <= year + PLANNED_YEARS;
+  return {
+    year: String(year),
+    spentRappen: sum(isCurrent, (row) => row.spentRappen),
+    plannedRappen: sum(isCurrent, (row) => row.plannedRappen),
+    nextYears: {
+      from: String(year + 1),
+      to: String(year + PLANNED_YEARS),
+      plannedRappen: sum(isNext, (row) => row.spentRappen + row.plannedRappen),
+    },
+  };
+}
+
+/** A capex line: spent plus planned per year, with the two parts for the tooltip. */
+export interface CapexSeries extends Series {
+  values: number[];
+  spent: number[];
+  planned: number[];
+}
+
+/** The investments chart (R5). */
+export interface CapexChart {
+  years: string[];
+  categories: CapexSeries[];
+  total: CapexSeries;
+  /** Index of the first future year; from there on the lines are drawn as planned. */
+  plannedFrom: number;
+  /** Index of the current year, which holds both spent and planned amounts. */
+  currentIndex: number;
+}
+
+/** Years shown before the current one at most (R5). */
+export const MAX_PAST_YEARS = 10;
+
+/**
+ * Investments per year and category from the first year with an investment (at most
+ * {@link MAX_PAST_YEARS} back) to the last planned year, at least up to the current year. A year
+ * without investments in a category is a real 0, not a gap.
+ */
+export function capexChart(rows: readonly CapexYear[], today: string): CapexChart {
+  const current = Number(today.slice(0, 4));
+  const numbers = rows.map((row) => Number(row.year));
+  const first = Math.max(Math.min(current, ...numbers), current - MAX_PAST_YEARS);
+  const last = Math.max(current, ...numbers);
+  const years = Array.from({ length: last - first + 1 }, (_, i) => String(first + i));
+  const series = (id: string, label: string, match: (row: CapexYear) => boolean): CapexSeries => {
+    const part = (amount: (row: CapexYear) => number) =>
+      years.map((year) =>
+        rows
+          .filter((row) => row.year === year && match(row))
+          .reduce((sum, row) => sum + amount(row), 0),
+      );
+    const spent = part((row) => row.spentRappen);
+    const planned = part((row) => row.plannedRappen);
+    return { id, label, spent, planned, values: spent.map((value, i) => value + planned[i]) };
+  };
+  const categories = [...new Map(rows.map((row) => [row.category, row.categoryLabel]))].map(
+    ([category, label]) => series(category, label, (row) => row.category === category),
+  );
+  return {
+    years,
+    categories,
+    total: series('total', 'Total', () => true),
+    plannedFrom: current + 1 - first,
+    currentIndex: current - first,
+  };
 }

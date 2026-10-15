@@ -8,6 +8,7 @@ import { provideFinanceSource } from './finance/dashboard/finance-sources';
 import { financeNavTopic } from './finance/finance.nav';
 import { subscriptionsFinanceSource } from './finance/subscriptions/subscriptions.finance';
 import { itemsNavTopic } from './items/items.nav';
+import { journalFinanceSource } from './journal/journal.finance';
 import { journalNavTopic } from './journal/journal.nav';
 import { provideNavTopic } from './layout/nav-topics';
 import { utilitiesFinanceSource } from './utilities/utilities.finance';
@@ -27,5 +28,6 @@ export const appConfig: ApplicationConfig = {
     // Cost categories of the finance dashboard (ADR 0013).
     provideFinanceSource(subscriptionsFinanceSource),
     provideFinanceSource(utilitiesFinanceSource),
+    provideFinanceSource(journalFinanceSource),
   ],
 };
