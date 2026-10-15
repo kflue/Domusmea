@@ -86,7 +86,7 @@ Workflow rules).
   its `paidRappen` (ADR 0012). Charts use Chart.js, imported only through `CHART_FACTORY`
   (`utility-chart/`) so it stays a lazy, browser-only chunk. Hide write controls with
   `AuthApi.can(...)` and guard form routes with `permissionGuard(...)`.
-- Finance dashboard `/finance` (ADR 0013): it only combines *finance sources*. To add a cost
+- Finance dashboard `/finance` (ADR 0013): it only combines _finance sources_. To add a cost
   category, write a pure function returning `OpexFigures` (`src/shared/finance-totals.ts`) in
   `src/shared/`, a `<feature>.finance.ts` whose `load` uses `import()` for everything but types, and
   one `provideFinanceSource(...)` line in `app.config.ts`. Chart.js is registered only in
