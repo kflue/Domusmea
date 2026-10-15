@@ -2,7 +2,7 @@ import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
-import { Subscription } from '../../../../shared/subscription';
+import { Subscription } from '../../../shared/subscription';
 import { SubscriptionList } from './subscription-list';
 
 const netflix: Subscription = {
@@ -102,6 +102,23 @@ describe('SubscriptionList', () => {
     expect(totals).toMatch(/Per year\s*CHF\s1.426\.80/);
     // Car insurance once, Netflix 9 × 18.90 (20 January to 20 September), newspaper 2 × 30.00.
     expect(totals).toMatch(/Paid in 2026 so far\s*CHF\s1.430\.10/);
+  });
+
+  it('totals what was paid in the selected year, keeping today’s prices per month and year', async () => {
+    const { fixture, element } = await render(subscriptions);
+    const select = element.querySelector<HTMLSelectElement>('#year')!;
+    expect([...select.options].map((option) => option.value)).toEqual(['2026', '2025', '2024']);
+
+    select.value = '2025';
+    select.dispatchEvent(new Event('change'));
+    await fixture.whenStable();
+
+    const totals = element.querySelector('dl')?.textContent ?? '';
+    expect(totals).toMatch(/Per month\s*CHF\s118\.90/);
+    expect(totals).toMatch(/Per year\s*CHF\s1.426\.80/);
+    // Car insurance once, Netflix 12 × 18.90, newspaper 7 × 30.00 (5 June to 5 December).
+    expect(totals).toMatch(/Paid in 2025\s*CHF\s1.636\.80/);
+    expect(totals).not.toContain('so far');
   });
 
   it('lists cancelled subscriptions collapsed below the active ones', async () => {

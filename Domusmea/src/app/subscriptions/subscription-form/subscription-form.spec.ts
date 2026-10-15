@@ -2,7 +2,7 @@ import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 import { provideRouter, Router } from '@angular/router';
-import { Subscription } from '../../../../shared/subscription';
+import { Subscription } from '../../../shared/subscription';
 import { SubscriptionForm } from './subscription-form';
 
 const carInsurance: Subscription = {
@@ -110,7 +110,7 @@ describe('SubscriptionForm', () => {
     await settle();
     http.expectOne('/api/subscriptions').flush([]);
     await fixture.whenStable();
-    expect(navigate).toHaveBeenCalledWith(['/finance/subscriptions']);
+    expect(navigate).toHaveBeenCalledWith(['/subscriptions']);
   });
 
   it('adds, validates and removes price changes, moving focus along', async () => {

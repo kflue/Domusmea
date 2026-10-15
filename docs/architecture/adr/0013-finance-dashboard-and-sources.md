@@ -1,6 +1,6 @@
 # 0013: Finance dashboard and cost source registry
 
-- Status: accepted
+- Status: accepted; subscriptions moved to `/subscriptions` by [0016](0016-subscriptions-area.md)
 - Date: 2026-10-15
 
 ## Context

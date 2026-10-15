@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   annualTotalRappen,
+  billingYears,
   billings,
   currentPrice,
   isActive,
@@ -8,6 +9,7 @@ import {
   monthlyShareIn,
   monthlyTotalRappen,
   nextBilling,
+  paidInYearRappen,
   paidRappen,
   priceOn,
   subscriptionOpex,
@@ -99,6 +101,28 @@ describe('subscription costs', () => {
     // Car insurance on 1 March, Netflix in January and February.
     expect(paidRappen([carInsurance, cancelled], '2026-01-01', '2026-10-15')).toBe(103780);
     expect(paidRappen([carInsurance], '2026-01-01', '2026-02-28')).toBe(0);
+  });
+
+  it('sums what was paid in a calendar year, up to today while it runs', () => {
+    const raised = { ...netflix, priceChanges: [{ validFrom: '2026-07-01', costRappen: 2190 }] };
+    const cancelled = { ...carInsurance, endDate: '2025-06-30' };
+    // 2025: car insurance on 1 March only; Netflix starts in 2026.
+    expect(paidInYearRappen([raised, cancelled], '2025', '2026-10-15')).toBe(100000);
+    // 2026: Netflix January–June at 18.90, July–October 15 at 21.90; the cancelled one is gone.
+    expect(paidInYearRappen([raised, cancelled], '2026', '2026-10-15')).toBe(6 * 1890 + 4 * 2190);
+    // The last billing of a past year, on 31 December, counts.
+    const yearEnd = { ...netflix, startDate: '2025-12-31' };
+    expect(paidInYearRappen([yearEnd], '2025', '2026-10-15')).toBe(1890);
+  });
+
+  it('lists the years with billings and the current one, newest first', () => {
+    const later = { ...netflix, startDate: '2026-12-01' };
+    expect(billingYears([carInsurance, later], '2026-10-15')).toEqual(['2026', '2025', '2024']);
+    expect(billingYears([later], '2026-10-15')).toEqual(['2026']);
+    expect(billingYears([{ ...carInsurance, endDate: '2024-12-31' }], '2026-10-15')).toEqual([
+      '2026',
+      '2024',
+    ]);
   });
 
   it('breaks annual prices down per month and rounds totals once', () => {

@@ -6,7 +6,7 @@
   @if (existing.error()) {
     <p role="alert" class="rounded border border-red-300 bg-red-50 p-3 text-red-800">
       This subscription could not be loaded. It may have been deleted.
-      <a routerLink="/finance/subscriptions" class="underline">Back to the subscriptions</a>
+      <a routerLink="/subscriptions" class="underline">Back to the subscriptions</a>
     </p>
   } @else if (isEdit() && existing.isLoading()) {
     <p aria-live="polite">Loading…</p>
@@ -195,7 +195,7 @@
         <button type="submit" class="btn-primary" [disabled]="subscriptionForm().submitting()">
           Save
         </button>
-        <a routerLink="/finance/subscriptions" class="btn-secondary">Cancel</a>
+        <a routerLink="/subscriptions" class="btn-secondary">Cancel</a>
       </div>
     </form>
   }

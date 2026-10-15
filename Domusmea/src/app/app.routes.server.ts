@@ -13,6 +13,8 @@ export const serverRoutes: ServerRoute[] = [
   { path: 'finance/**', renderMode: RenderMode.Client },
   { path: 'utilities', renderMode: RenderMode.Client },
   { path: 'utilities/**', renderMode: RenderMode.Client },
+  { path: 'subscriptions', renderMode: RenderMode.Client },
+  { path: 'subscriptions/**', renderMode: RenderMode.Client },
   { path: 'settings', renderMode: RenderMode.Client },
   { path: '**', renderMode: RenderMode.Prerender },
 ];

@@ -5,7 +5,7 @@ import { OpexFigures } from '../../../shared/finance-totals';
 import { JournalEntry } from '../../../shared/journal';
 import { Subscription } from '../../../shared/subscription';
 import { UtilityEntry } from '../../../shared/utility';
-import { subscriptionsFinanceSource } from '../subscriptions/subscriptions.finance';
+import { subscriptionsFinanceSource } from '../../subscriptions/subscriptions.finance';
 import { journalFinanceSource } from '../../journal/journal.finance';
 import { utilitiesFinanceSource } from '../../utilities/utilities.finance';
 import { FINANCE_SOURCES, provideFinanceSource } from './finance-sources';
@@ -34,7 +34,7 @@ describe('finance sources', () => {
   it('are registered in order and request nothing until loaded', () => {
     const sources = TestBed.inject(FINANCE_SOURCES);
     expect(sources.map((s) => [s.id, s.kind, s.link])).toEqual([
-      ['subscriptions', 'opex', '/finance/subscriptions'],
+      ['subscriptions', 'opex', '/subscriptions'],
       ['utilities', 'opex', '/utilities'],
       ['journal', 'capex', '/journal'],
     ]);

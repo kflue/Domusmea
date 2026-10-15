@@ -1,7 +1,7 @@
 import { HttpClient, httpResource } from '@angular/common/http';
 import { inject, Service } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
-import { Subscription, SubscriptionInput } from '../../../shared/subscription';
+import { Subscription, SubscriptionInput } from '../../shared/subscription';
 
 export const SUBSCRIPTIONS_URL = '/api/subscriptions';
 

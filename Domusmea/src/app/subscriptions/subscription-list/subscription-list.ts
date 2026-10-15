@@ -1,21 +1,22 @@
 import { DOCUMENT } from '@angular/common';
 import { afterNextRender, Component, computed, inject, Injector, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { nextCancellationDeadline } from '../../../../shared/cancellation';
-import { DEFAULT_TIME_ZONE, formatChf, formatDate, todayIn } from '../../../../shared/format';
-import { BILLING_INTERVAL_LABELS, Subscription } from '../../../../shared/subscription';
+import { nextCancellationDeadline } from '../../../shared/cancellation';
+import { DEFAULT_TIME_ZONE, formatChf, formatDate, todayIn } from '../../../shared/format';
+import { BILLING_INTERVAL_LABELS, Subscription } from '../../../shared/subscription';
 import {
   annualTotalRappen,
+  billingYears,
   currentPrice,
   isActive,
   monthlyShare,
   monthlyTotalRappen,
   nextBilling,
-  paidRappen,
+  paidInYearRappen,
   priceOn,
   upcomingPriceChanges,
-} from '../../../../shared/subscription-costs';
-import { ConfirmDelete } from '../../../shared/confirm-delete';
+} from '../../../shared/subscription-costs';
+import { ConfirmDelete } from '../../shared/confirm-delete';
 import { SubscriptionsApi } from '../subscriptions-api';
 
 /** A subscription with its figures as of today, formatted for the tables. */
@@ -35,8 +36,8 @@ interface SubscriptionRow {
 }
 
 /**
- * Subscriptions with their monthly and annual cost and what was paid this year
- * (`/finance/subscriptions`). Cancelled ones are listed apart, collapsed (ADR 0009).
+ * Subscriptions with their monthly and annual cost and what was paid in a selected year
+ * (`/subscriptions`, ADR 0016). Cancelled ones are listed apart, collapsed (ADR 0009).
  */
 @Component({
   selector: 'app-subscription-list',
@@ -50,7 +51,9 @@ export class SubscriptionList {
 
   protected readonly list = this.api.list;
   protected readonly today = todayIn(DEFAULT_TIME_ZONE);
-  protected readonly year = this.today.slice(0, 4);
+  protected readonly currentYear = this.today.slice(0, 4);
+  /** Year of the "Paid in" total (`YYYY`); the current year by default. */
+  protected readonly year = signal(this.currentYear);
   private readonly subscriptions = computed(() => (this.list.hasValue() ? this.list.value() : []));
 
   protected readonly active = computed(() =>
@@ -65,16 +68,24 @@ export class SubscriptionList {
       .map((subscription) => this.toRow(subscription, subscription.endDate ?? undefined)),
   );
 
+  /** Years with billings and the current year, newest first. */
+  protected readonly years = computed(() => billingYears(this.subscriptions(), this.today));
+
+  /** Per month and per year at today's prices whatever the year; paid in the selected year. */
   protected readonly totals = computed(() => {
     const subscriptions = this.subscriptions();
     return {
       perMonth: formatChf(monthlyTotalRappen(subscriptions, this.today)),
       perYear: formatChf(annualTotalRappen(subscriptions, this.today)),
-      paid: formatChf(paidRappen(subscriptions, `${this.year}-01-01`, this.today)),
+      paid: formatChf(paidInYearRappen(subscriptions, this.year(), this.today)),
     };
   });
 
   protected readonly deleteError = signal('');
+
+  protected selectYear(event: Event): void {
+    this.year.set((event.target as HTMLSelectElement).value);
+  }
 
   protected async delete(subscription: Subscription): Promise<void> {
     this.deleteError.set('');
