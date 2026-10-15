@@ -85,5 +85,6 @@ reset with `npm run reset-login` (after `npm run build`), which brings back `adm
 | [0013](adr/0013-finance-dashboard-and-sources.md)      | Finance dashboard at `/finance`; cost categories registered as sources    |
 | [0014](adr/0014-investments-on-finance-dashboard.md)   | Investments by year: planned = future-dated, category of the linked item  |
 | [0015](adr/0015-navigation-groups.md)                  | Side navigation grouped into capex and opex, Finance on top               |
+| [0016](adr/0016-subscriptions-area.md)                 | Subscriptions at `/subscriptions` with year totals; old URLs redirect     |
 
 New decisions get the next number; superseded ADRs stay and are marked as such.

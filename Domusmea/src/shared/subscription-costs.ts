@@ -62,6 +62,30 @@ export function paidRappen(
     .reduce((total, billing) => total + billing.costRappen, 0);
 }
 
+/**
+ * Paid in calendar year `year` (`YYYY`): its billings from 1 January to 31 December, or to `today`
+ * while the year runs.
+ */
+export function paidInYearRappen(
+  subscriptions: readonly SubscriptionTerms[],
+  year: string,
+  today: string,
+): number {
+  const end = `${year}-12-31`;
+  return paidRappen(subscriptions, `${year}-01-01`, end < today ? end : today);
+}
+
+/** Years (`YYYY`) with a billing up to `today`, and the current year, newest first. */
+export function billingYears(subscriptions: readonly SubscriptionTerms[], today: string): string[] {
+  const years = new Set([today.slice(0, 4)]);
+  for (const terms of subscriptions) {
+    for (const billing of billings(terms, terms.startDate, today)) {
+      years.add(billing.date.slice(0, 4));
+    }
+  }
+  return [...years].sort((a, b) => b.localeCompare(a));
+}
+
 /** Not cancelled as of `today`: no end date, or one that has not passed. Includes future starts. */
 export function isActive(terms: SubscriptionTerms, today: string): boolean {
   return terms.endDate === null || terms.endDate >= today;

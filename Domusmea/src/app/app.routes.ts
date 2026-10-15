@@ -36,6 +36,12 @@ export const routes: Routes = [
     loadChildren: () => import('./utilities/utilities.routes').then((m) => m.utilityRoutes),
   },
   {
+    path: 'subscriptions',
+    canActivate: [signedInGuard],
+    loadChildren: () =>
+      import('./subscriptions/subscriptions.routes').then((m) => m.subscriptionRoutes),
+  },
+  {
     path: 'settings',
     canActivate: [signedInGuard],
     loadChildren: () => import('./settings/settings.routes').then((m) => m.settingsRoutes),

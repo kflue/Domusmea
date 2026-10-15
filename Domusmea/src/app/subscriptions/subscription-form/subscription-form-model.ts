@@ -1,5 +1,5 @@
-import { BillingInterval, Subscription, SubscriptionInput } from '../../../../shared/subscription';
-import { parseChf, rappenToChfText } from '../../../shared/chf-input';
+import { BillingInterval, Subscription, SubscriptionInput } from '../../../shared/subscription';
+import { parseChf, rappenToChfText } from '../../shared/chf-input';
 
 /** A price change as edited in the form. */
 export interface PriceChangeFormModel {

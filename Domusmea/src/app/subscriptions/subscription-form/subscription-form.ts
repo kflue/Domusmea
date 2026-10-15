@@ -14,7 +14,7 @@ import {
 } from '@angular/core';
 import { applyEach, form, FormField, maxLength, submit, validate } from '@angular/forms/signals';
 import { Router, RouterLink } from '@angular/router';
-import { DEFAULT_TIME_ZONE, formatChf, todayIn } from '../../../../shared/format';
+import { DEFAULT_TIME_ZONE, formatChf, todayIn } from '../../../shared/format';
 import {
   BILLING_INTERVAL_LABELS,
   BILLING_INTERVALS,
@@ -23,13 +23,13 @@ import {
   MAX_PRICE_RAPPEN,
   Subscription,
   SUBSCRIPTION_NAME_MAX_LENGTH,
-} from '../../../../shared/subscription';
-import { parseChf } from '../../../shared/chf-input';
-import { FieldErrors } from '../../../shared/field-errors';
+} from '../../../shared/subscription';
+import { parseChf } from '../../shared/chf-input';
+import { FieldErrors } from '../../shared/field-errors';
 import { SubscriptionsApi } from '../subscriptions-api';
 import { newSubscriptionForm, toFormModel, toSubscriptionInput } from './subscription-form-model';
 
-const LIST_URL = '/finance/subscriptions';
+const LIST_URL = '/subscriptions';
 
 /** Validation error for a required CHF price up to the maximum, or `undefined` if `text` is one. */
 function priceError(text: string) {
@@ -55,7 +55,7 @@ function noticeOption(months: number) {
   return { value: String(months), label };
 }
 
-/** Create (`/finance/subscriptions/new`) or edit (`/finance/subscriptions/:id`) a subscription. */
+/** Create (`/subscriptions/new`) or edit (`/subscriptions/:id`) a subscription. */
 @Component({
   selector: 'app-subscription-form',
   imports: [FormField, RouterLink, FieldErrors],

@@ -76,7 +76,7 @@ Workflow rules).
   SMTP password is encrypted with `SETTINGS_KEY` and never returned by the API (ADR 0006).
 - Money is integer Rappen (CHF), calendar dates `YYYY-MM-DD` strings (ADR 0004); format with
   `src/shared/format.ts`.
-- Finance area `/finance` (ADR 0009): subscriptions at `/finance/subscriptions`, API
+- Subscriptions `/subscriptions` (ADR 0009, 0016; old `/finance/subscriptions` URLs redirect), API
   `/api/subscriptions` (`finance:*` permissions). Billings, price history and cost totals are
   computed by `src/shared/subscription-costs.ts`. Cancellation
   deadlines and the hourly reminder email: `src/shared/cancellation.ts`, ADR 0010. Background jobs use

@@ -1,4 +1,4 @@
-import { Subscription } from '../../../../shared/subscription';
+import { Subscription } from '../../../shared/subscription';
 import { newSubscriptionForm, toFormModel, toSubscriptionInput } from './subscription-form-model';
 
 describe('subscription form model conversion', () => {

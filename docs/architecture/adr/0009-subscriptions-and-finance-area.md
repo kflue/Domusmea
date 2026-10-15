@@ -1,6 +1,6 @@
 # 0009: Subscriptions with price history in a finance area
 
-- Status: accepted
+- Status: accepted; the finance area part changed by [0016](0016-subscriptions-area.md)
 - Date: 2026-10-15
 
 ## Context
