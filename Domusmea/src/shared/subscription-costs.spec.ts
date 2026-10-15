@@ -5,10 +5,12 @@ import {
   currentPrice,
   isActive,
   monthlyShare,
+  monthlyShareIn,
   monthlyTotalRappen,
   nextBilling,
   paidRappen,
   priceOn,
+  subscriptionOpex,
   SubscriptionTerms,
   upcomingPriceChanges,
 } from './subscription-costs';
@@ -129,5 +131,49 @@ describe('subscription costs', () => {
     expect(nextBilling(netflix, '2026-10-15')).toEqual({ date: '2026-10-15', costRappen: 1890 });
     expect(nextBilling(netflix, '2026-10-16')?.date).toBe('2026-11-15');
     expect(nextBilling(carInsurance, '2026-03-02')?.date).toBe('2027-03-01');
+  });
+});
+
+describe('monthlyShareIn and subscriptionOpex', () => {
+  const annual: SubscriptionTerms = {
+    interval: 'annual',
+    costRappen: 12_000,
+    startDate: '2026-03-15',
+    endDate: '2027-03-14',
+    priceChanges: [],
+  };
+
+  it('spreads an annual price over every month of its term (R3)', () => {
+    expect(monthlyShareIn(annual, '2026-02')).toBe(0);
+    expect(monthlyShareIn(annual, '2026-03')).toBe(1_000);
+    expect(monthlyShareIn(annual, '2026-12')).toBe(1_000);
+    expect(monthlyShareIn(annual, '2027-03')).toBe(1_000);
+    expect(monthlyShareIn(annual, '2027-04')).toBe(0);
+  });
+
+  it('uses the price in effect on the first day of the month', () => {
+    const raised = { ...netflix, priceChanges: [{ validFrom: '2026-03-15', costRappen: 2_190 }] };
+    expect(monthlyShareIn(raised, '2026-03')).toBe(1_890);
+    expect(monthlyShareIn(raised, '2026-04')).toBe(2_190);
+  });
+
+  it('returns the current monthly total and a value per month from the first start', () => {
+    const opex = subscriptionOpex([netflix, annual], '2026-04-10');
+    expect(opex.currentMonthlyRappen).toBe(1_890 + 1_000);
+    expect(opex.monthly).toEqual({
+      '2026-01': 1_890,
+      '2026-02': 1_890,
+      '2026-03': 2_890,
+      '2026-04': 2_890,
+    });
+    expect(subscriptionOpex([], '2026-04-10')).toEqual({ currentMonthlyRappen: 0, monthly: {} });
+  });
+
+  it('matches the monthly total of the subscriptions page', () => {
+    const third = { ...netflix, interval: 'annual' as const, costRappen: 1_000 };
+    const opex = subscriptionOpex([netflix, third], '2026-04-10');
+    expect(Math.round(opex.currentMonthlyRappen)).toBe(
+      monthlyTotalRappen([netflix, third], '2026-04-10'),
+    );
   });
 });

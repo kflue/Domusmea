@@ -1,4 +1,5 @@
 import { addDays, addMonths } from './calendar';
+import { OpexFigures } from './finance-totals';
 import { Commodity, UtilityEntry } from './utility';
 
 /** Usage cost plus fixed fee of an entry. */
@@ -163,6 +164,24 @@ export function lastTwelveBilledMonths(
   }
   const nextMonth = addMonths(`${latest.slice(0, 7)}-01`, 1);
   return { from: addMonths(nextMonth, -12), to: addDays(nextMonth, -1) };
+}
+
+/**
+ * Utilities as an opex source of the finance dashboard (ADR 0013): the cost of the last twelve
+ * billed months ÷ 12, as on this page, and {@link paidRappen} for each month a bill covers. Months
+ * without a bill (not billed yet) have no key, so the chart shows a gap instead of 0.
+ */
+export function utilityOpex(entries: readonly UtilityEntry[]): OpexFigures {
+  const range = lastTwelveBilledMonths(entries);
+  const covered = new Set(entries.flatMap((entry) => monthsOf(entry.periodFrom, entry.periodTo)));
+  const monthly: Record<string, number> = {};
+  for (const month of [...covered].sort((a, b) => a.localeCompare(b))) {
+    monthly[month] = paidRappen(entries, `${month}-01`, `${month}-01`);
+  }
+  return {
+    currentMonthlyRappen: range ? paidRappen(entries, range.from, range.to) / 12 : 0,
+    monthly,
+  };
 }
 
 /** Change from `previous` to `current` in percent; `undefined` when `previous` is 0. */

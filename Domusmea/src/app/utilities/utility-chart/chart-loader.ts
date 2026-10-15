@@ -1,29 +1,6 @@
-import {
-  BarController,
-  BarElement,
-  CategoryScale,
-  Chart,
-  Legend,
-  LinearScale,
-  LineController,
-  LineElement,
-  PointElement,
-  Tooltip,
-} from 'chart.js';
-import { ChartColors, chartConfig, ChartFactory, mainDatasetIndex } from './utility-chart-config';
-
-// Only the parts the utility charts use, so the lazy chunk stays small (ADR 0011).
-Chart.register(
-  BarController,
-  BarElement,
-  CategoryScale,
-  Legend,
-  LinearScale,
-  LineController,
-  LineElement,
-  PointElement,
-  Tooltip,
-);
+import { Chart } from '../../shared/chart-js';
+import { ChartColors } from '../../shared/chart-support';
+import { chartConfig, ChartFactory, mainDatasetIndex } from './utility-chart-config';
 
 /** Draws a utility chart on `canvas` with Chart.js. Imported lazily through `CHART_FACTORY`. */
 export const createChart: ChartFactory = (canvas: HTMLCanvasElement, colors: ChartColors) => {

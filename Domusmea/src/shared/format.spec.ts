@@ -5,7 +5,9 @@ import {
   formatDate,
   formatDateTime,
   formatFrancs,
+  formatMonth,
   formatPercentChange,
+  formatShare,
   formatUnitPrice,
   todayIn,
 } from './format';
@@ -52,5 +54,17 @@ describe('formatDateTime', () => {
   it('formats a timestamp in Swiss notation and local time', () => {
     expect(formatDateTime('2026-10-14T20:45:00.000Z')).toBe('14.10.2026, 22:45');
     expect(formatDateTime('2026-01-05T07:03:00.000Z', 'UTC')).toBe('05.01.2026, 07:03');
+  });
+});
+
+describe('formatMonth and formatShare', () => {
+  it('formats a month as its short English name and year', () => {
+    expect(formatMonth('2026-03')).toBe('Mar 2026');
+    expect(formatMonth('2025-12-31')).toBe('Dec 2025');
+  });
+
+  it('formats a share in whole percent', () => {
+    expect(formatShare(0.7019)).toMatch(/^70\s?%$/);
+    expect(formatShare(0)).toMatch(/^0\s?%$/);
   });
 });

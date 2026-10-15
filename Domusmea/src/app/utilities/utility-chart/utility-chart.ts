@@ -10,14 +10,8 @@ import {
   signal,
   viewChild,
 } from '@angular/core';
-import { CHART_FACTORY, ChartColors, ChartHandle, ChartPeriod } from './utility-chart-config';
-
-/** Colours of the surrounding text, so axes and legend follow light and dark mode. */
-function pageColors(element: HTMLElement): ChartColors {
-  const text = getComputedStyle(element).color || 'rgb(55, 65, 81)';
-  const [red, green, blue] = text.match(/\d+/g) ?? ['55', '65', '81'];
-  return { text, grid: `rgba(${red}, ${green}, ${blue}, 0.15)` };
-}
+import { pageColors, stepPeriod } from '../../shared/chart-support';
+import { CHART_FACTORY, ChartHandle, ChartPeriod } from './utility-chart-config';
 
 /**
  * Bar and line chart of one commodity (R5), drawn in the browser with Chart.js loaded on first use.
@@ -103,31 +97,10 @@ export class UtilityChart {
   }
 
   protected onKeydown(event: KeyboardEvent): void {
-    const last = this.periods().length - 1;
-    const current = this.selected();
-    let next: number;
-    switch (event.key) {
-      case 'ArrowRight':
-        next = current === undefined ? 0 : Math.min(current + 1, last);
-        break;
-      case 'ArrowLeft':
-        next = current === undefined ? last : Math.max(current - 1, 0);
-        break;
-      case 'Home':
-        next = 0;
-        break;
-      case 'End':
-        next = last;
-        break;
-      case 'Escape':
-        this.select(undefined);
-        return;
-      default:
-        return;
-    }
-    event.preventDefault();
-    if (last >= 0) {
-      this.select(next);
+    const step = stepPeriod(event.key, this.selected(), this.periods().length);
+    if (step) {
+      event.preventDefault();
+      this.select(step.index);
     }
   }
 }

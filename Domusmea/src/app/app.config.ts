@@ -4,10 +4,13 @@ import { routes } from './app.routes';
 import { provideClientHydration } from '@angular/platform-browser';
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { authInterceptor } from './auth/auth-guards';
+import { provideFinanceSource } from './finance/dashboard/finance-sources';
 import { financeNavTopic } from './finance/finance.nav';
+import { subscriptionsFinanceSource } from './finance/subscriptions/subscriptions.finance';
 import { itemsNavTopic } from './items/items.nav';
 import { journalNavTopic } from './journal/journal.nav';
 import { provideNavTopic } from './layout/nav-topics';
+import { utilitiesFinanceSource } from './utilities/utilities.finance';
 import { utilitiesNavTopic } from './utilities/utilities.nav';
 
 export const appConfig: ApplicationConfig = {
@@ -21,5 +24,8 @@ export const appConfig: ApplicationConfig = {
     provideNavTopic(journalNavTopic),
     provideNavTopic(financeNavTopic),
     provideNavTopic(utilitiesNavTopic),
+    // Cost categories of the finance dashboard (ADR 0013).
+    provideFinanceSource(subscriptionsFinanceSource),
+    provideFinanceSource(utilitiesFinanceSource),
   ],
 };

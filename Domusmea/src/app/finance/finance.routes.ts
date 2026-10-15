@@ -1,8 +1,15 @@
 import { Routes } from '@angular/router';
+import { permissionGuard } from '../auth/auth-guards';
 
-/** The finance area (ADR 0009); `/finance` itself is reserved for the dashboard. */
+/** The finance area (ADR 0009): the dashboard at `/finance` (ADR 0013) and the subscriptions. */
 export const financeRoutes: Routes = [
-  { path: '', pathMatch: 'full', redirectTo: 'subscriptions' },
+  {
+    path: '',
+    pathMatch: 'full',
+    title: 'Finance · Domusmea',
+    canActivate: [permissionGuard('finance:read')],
+    loadComponent: () => import('./dashboard/finance-dashboard').then((m) => m.FinanceDashboard),
+  },
   {
     path: 'subscriptions',
     title: 'Subscriptions · Domusmea',

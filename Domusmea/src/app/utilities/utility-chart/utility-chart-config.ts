@@ -1,5 +1,6 @@
 import { InjectionToken } from '@angular/core';
 import type { ChartConfiguration } from 'chart.js';
+import { ChartColors } from '../../shared/chart-support';
 
 /** One billing period as drawn in the chart, oldest first. */
 export interface ChartPeriod {
@@ -13,12 +14,6 @@ export interface ChartPeriod {
   previous: { amount: number | null; cost: number } | null;
   /** Tooltip lines: amount, cost and price per unit. */
   details: string[];
-}
-
-/** Colours taken from the page so the chart follows light and dark mode. */
-export interface ChartColors {
-  text: string;
-  grid: string;
 }
 
 /**

@@ -1,4 +1,5 @@
-import { addMonths } from './calendar';
+import { addDays, addMonths } from './calendar';
+import { monthRange, OpexFigures } from './finance-totals';
 import { PriceChange, Subscription } from './subscription';
 
 /**
@@ -87,6 +88,50 @@ export function monthlyTotalRappen(
       .filter((terms) => isActive(terms, today))
       .reduce((total, terms) => total + monthlyShare(terms, today), 0),
   );
+}
+
+/**
+ * Monthly share of `terms` in the calendar month `month` (`YYYY-MM`) for the finance chart
+ * (ADR 0013): the price in effect on the first day it runs that month, annual prices divided by 12,
+ * so an annual billing is no spike. 0 in months it does not run at all. Unrounded.
+ */
+export function monthlyShareIn(terms: SubscriptionTerms, month: string): number {
+  const first = `${month}-01`;
+  const last = addDays(addMonths(first, 1), -1);
+  if (terms.startDate > last || (terms.endDate !== null && terms.endDate < first)) {
+    return 0;
+  }
+  const price = priceOn(terms, terms.startDate > first ? terms.startDate : first);
+  return terms.interval === 'monthly' ? price : price / 12;
+}
+
+/**
+ * Subscriptions as an opex source of the finance dashboard: the current monthly total as on this
+ * page, and per month from the first start up to the month of `today` the rounded sum of the
+ * monthly shares.
+ */
+export function subscriptionOpex(
+  subscriptions: readonly SubscriptionTerms[],
+  today: string,
+): OpexFigures {
+  const monthly: Record<string, number> = {};
+  const first = subscriptions.reduce<string | undefined>(
+    (min, terms) => (min === undefined || terms.startDate < min ? terms.startDate : min),
+    undefined,
+  );
+  if (first !== undefined) {
+    for (const month of monthRange(first.slice(0, 7), today.slice(0, 7))) {
+      monthly[month] = Math.round(
+        subscriptions.reduce((sum, terms) => sum + monthlyShareIn(terms, month), 0),
+      );
+    }
+  }
+  return {
+    currentMonthlyRappen: subscriptions
+      .filter((terms) => isActive(terms, today))
+      .reduce((sum, terms) => sum + monthlyShare(terms, today), 0),
+    monthly,
+  };
 }
 
 /** Yearly cost of the active subscriptions at their current prices. */

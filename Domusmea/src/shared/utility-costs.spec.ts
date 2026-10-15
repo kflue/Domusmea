@@ -13,6 +13,7 @@ import {
   rappenPerUnit,
   sameQuarterYearBefore,
   totalRappen,
+  utilityOpex,
   yearOverYear,
   yearTotals,
 } from './utility-costs';
@@ -289,5 +290,47 @@ describe('sameQuarterYearBefore', () => {
         irregular,
       ),
     ).toBeUndefined();
+  });
+});
+
+describe('utilityOpex', () => {
+  it('returns the last twelve billed months ÷ 12 and a value per billed month (R2, R3)', () => {
+    const entries = [
+      entry({
+        periodFrom: '2025-10-01',
+        periodTo: '2025-12-31',
+        costRappen: 58_500,
+        fixedFeeRappen: 1_500,
+      }),
+      entry({
+        periodFrom: '2026-01-01',
+        periodTo: '2026-03-31',
+        costRappen: 58_500,
+        fixedFeeRappen: 1_500,
+      }),
+      entry({
+        periodFrom: '2026-04-01',
+        periodTo: '2026-06-30',
+        costRappen: 58_500,
+        fixedFeeRappen: 1_500,
+      }),
+      entry({
+        periodFrom: '2026-07-01',
+        periodTo: '2026-09-30',
+        costRappen: 58_500,
+        fixedFeeRappen: 1_500,
+      }),
+    ];
+    const opex = utilityOpex(entries);
+    expect(opex.currentMonthlyRappen).toBe(20_000);
+    expect(Object.keys(opex.monthly)).toHaveLength(12);
+    expect(opex.monthly['2025-10']).toBe(20_000);
+    expect(opex.monthly['2026-09']).toBe(20_000);
+    // Not billed yet: no value rather than 0.
+    expect(opex.monthly['2026-10']).toBeUndefined();
+  });
+
+  it('is empty without bills', () => {
+    expect(utilityOpex([])).toEqual({ currentMonthlyRappen: 0, monthly: {} });
   });
 });
