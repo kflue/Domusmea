@@ -94,6 +94,30 @@ const MIGRATIONS: readonly string[] = [
      SELECT role_id, 'journal:read' FROM role_permissions WHERE permission = 'items:read';
    INSERT INTO role_permissions (role_id, permission)
      SELECT role_id, 'journal:write' FROM role_permissions WHERE permission = 'items:write';`,
+  // Subscriptions with their price history (ADR 0009) and the cancellation deadline last reminded of
+  // (ADR 0010); roles with the journal permissions get the same on finance.
+  `CREATE TABLE subscriptions (
+     id INTEGER PRIMARY KEY,
+     name TEXT NOT NULL,
+     interval TEXT NOT NULL CHECK (interval IN ('monthly', 'annual')),
+     cost_rappen INTEGER NOT NULL CHECK (cost_rappen BETWEEN 0 AND 100000000),
+     start_date TEXT NOT NULL,
+     end_date TEXT CHECK (end_date >= start_date),
+     notice_months INTEGER CHECK (notice_months BETWEEN 0 AND 24),
+     cancel_reminded_for TEXT,
+     created_at TEXT NOT NULL,
+     updated_at TEXT NOT NULL
+   );
+   CREATE TABLE subscription_price_changes (
+     subscription_id INTEGER NOT NULL REFERENCES subscriptions (id) ON DELETE CASCADE,
+     valid_from TEXT NOT NULL,
+     cost_rappen INTEGER NOT NULL CHECK (cost_rappen BETWEEN 0 AND 100000000),
+     PRIMARY KEY (subscription_id, valid_from)
+   );
+   INSERT INTO role_permissions (role_id, permission)
+     SELECT role_id, 'finance:read' FROM role_permissions WHERE permission = 'journal:read';
+   INSERT INTO role_permissions (role_id, permission)
+     SELECT role_id, 'finance:write' FROM role_permissions WHERE permission = 'journal:write';`,
 ];
 
 export const DEFAULT_DB_PATH = 'data/domusmea.db';

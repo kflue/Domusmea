@@ -13,10 +13,12 @@ Browser ──HTTP──▶ Express (src/server.ts)
                    │   ├─ /account        ──▶ src/server/auth/  (sign-ins, password, sign out)
                    │   ├─ /items          ──▶ src/server/items/ ──▶ SQLite (src/server/db.ts)
                    │   ├─ /journal        ──▶ src/server/journal/ ──▶ SQLite (repairs, investments)
+                   │   ├─ /subscriptions  ──▶ src/server/subscriptions/ ──▶ SQLite (with price history)
                    │   └─ /settings/email ──▶ src/server/email/ ──▶ SQLite, SMTP (test email)
                    ├─ static files (dist/browser)
                    └─ Angular SSR (AngularNodeAppEngine)
                   warranty notifier (hourly, in-process) ──▶ SQLite, SMTP (src/server/warranty/, email/)
+                  cancellation reminder (hourly, in-process) ──▶ SQLite, SMTP (src/server/subscriptions/)
 ```
 
 ## Source layout (`Domusmea/src/`)
@@ -44,16 +46,16 @@ Rules:
 
 The SMTP server and the reminder recipients are set on the Settings page (`/settings`, ADR 0006).
 
-| Variable             | Default                                                | Purpose                                                                                     |
-| -------------------- | ------------------------------------------------------ | ------------------------------------------------------------------------------------------- |
-| `DB_PATH`            | `data/domusmea.db` (relative to the working directory) | SQLite file                                                                                 |
-| `SETTINGS_KEY`       | none                                                   | Encrypts the stored SMTP password: 32 random bytes, base64 (`openssl rand -base64 32`)      |
-| `APP_TIMEZONE`       | `Europe/Zurich`                                        | Time zone that defines "today" for warranty expiry; invalid values fall back to the default |
-| `PORT`               | `4000`                                                 | Port of the built server                                                                    |
-| `HOST`               | `127.0.0.1`                                            | Interface of the built server; see ADR 0005 before exposing it                              |
-| `ALLOWED_HOSTS`      | none                                                   | Extra host names accepted by `/api` (comma-separated, `*.domain` allowed)                   |
-| `ALLOW_REMOTE_SETUP` | `false`                                                | `true` accepts the first-run setup from other machines (ADR 0007)                           |
-| `SECURE_COOKIES`     | `false`                                                | `true` always marks the session cookie `Secure` (TLS proxy without `X-Forwarded-Proto`)     |
+| Variable             | Default                                                | Purpose                                                                                                                |
+| -------------------- | ------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------- |
+| `DB_PATH`            | `data/domusmea.db` (relative to the working directory) | SQLite file                                                                                                            |
+| `SETTINGS_KEY`       | none                                                   | Encrypts the stored SMTP password: 32 random bytes, base64 (`openssl rand -base64 32`)                                 |
+| `APP_TIMEZONE`       | `Europe/Zurich`                                        | Time zone that defines "today" for warranty expiry and cancellation reminders; invalid values fall back to the default |
+| `PORT`               | `4000`                                                 | Port of the built server                                                                                               |
+| `HOST`               | `127.0.0.1`                                            | Interface of the built server; see ADR 0005 before exposing it                                                         |
+| `ALLOWED_HOSTS`      | none                                                   | Extra host names accepted by `/api` (comma-separated, `*.domain` allowed)                                              |
+| `ALLOW_REMOTE_SETUP` | `false`                                                | `true` accepts the first-run setup from other machines (ADR 0007)                                                      |
+| `SECURE_COOKIES`     | `false`                                                | `true` always marks the session cookie `Secure` (TLS proxy without `X-Forwarded-Proto`)                                |
 
 Everything except `/api/auth` requires a login (ADR 0007). The first sign-in is `admin` / `admin` on
 the server machine, followed by choosing your own username and password. A forgotten password is
@@ -61,15 +63,17 @@ reset with `npm run reset-login` (after `npm run build`), which brings back `adm
 
 ## Decisions
 
-| ADR                                               | Decision                                                             |
-| ------------------------------------------------- | -------------------------------------------------------------------- |
-| [0001](adr/0001-single-app-layered-backend.md)    | Single Angular SSR app; backend layered inside it                    |
-| [0002](adr/0002-sqlite-with-node-sqlite.md)       | SQLite through Node's built-in `node:sqlite`                         |
-| [0003](adr/0003-warranty-expiry-notifications.md) | In-process hourly warranty check, email via SMTP                     |
-| [0004](adr/0004-money-and-dates.md)               | CHF stored as integer Rappen; dates as ISO strings                   |
-| [0005](adr/0005-no-login-network-safeguards.md)   | No login yet; host allowlist, local binding and other API safeguards |
-| [0006](adr/0006-email-settings-in-database.md)    | SMTP server and recipients set in the UI, password encrypted         |
-| [0007](adr/0007-login-and-roles.md)               | Login with one owner account, roles as permission sets               |
-| [0008](adr/0008-side-navigation.md)               | Collapsible side navigation, topics registered per feature           |
+| ADR                                                | Decision                                                                  |
+| -------------------------------------------------- | ------------------------------------------------------------------------- |
+| [0001](adr/0001-single-app-layered-backend.md)     | Single Angular SSR app; backend layered inside it                         |
+| [0002](adr/0002-sqlite-with-node-sqlite.md)        | SQLite through Node's built-in `node:sqlite`                              |
+| [0003](adr/0003-warranty-expiry-notifications.md)  | In-process hourly warranty check, email via SMTP                          |
+| [0004](adr/0004-money-and-dates.md)                | CHF stored as integer Rappen; dates as ISO strings                        |
+| [0005](adr/0005-no-login-network-safeguards.md)    | No login yet; host allowlist, local binding and other API safeguards      |
+| [0006](adr/0006-email-settings-in-database.md)     | SMTP server and recipients set in the UI, password encrypted              |
+| [0007](adr/0007-login-and-roles.md)                | Login with one owner account, roles as permission sets                    |
+| [0008](adr/0008-side-navigation.md)                | Collapsible side navigation, topics registered per feature                |
+| [0009](adr/0009-subscriptions-and-finance-area.md) | Subscriptions with price history, costs derived in `src/shared`           |
+| [0010](adr/0010-cancellation-reminders.md)         | Email reminder a third of the notice period before cancellation deadlines |
 
 New decisions get the next number; superseded ADRs stay and are marked as such.

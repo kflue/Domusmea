@@ -1,0 +1,202 @@
+<section class="mx-auto max-w-2xl">
+  <h1 class="mb-6 text-2xl font-semibold">
+    {{ isEdit() ? 'Edit subscription' : 'New subscription' }}
+  </h1>
+
+  @if (existing.error()) {
+    <p role="alert" class="rounded border border-red-300 bg-red-50 p-3 text-red-800">
+      This subscription could not be loaded. It may have been deleted.
+      <a routerLink="/finance/subscriptions" class="underline">Back to the subscriptions</a>
+    </p>
+  } @else if (isEdit() && existing.isLoading()) {
+    <p aria-live="polite">Loading…</p>
+  } @else {
+    <form novalidate (submit)="save($event)" class="grid gap-5">
+      <div>
+        <label for="name" class="block font-medium">Name <span aria-hidden="true">*</span></label>
+        <input
+          id="name"
+          class="field"
+          autocomplete="off"
+          placeholder="Netflix, car insurance, …"
+          aria-required="true"
+          aria-describedby="name-errors"
+          [attr.aria-invalid]="
+            subscriptionForm.name().touched() && subscriptionForm.name().invalid()
+          "
+          [formField]="subscriptionForm.name"
+        />
+        <app-field-errors errorId="name-errors" [field]="subscriptionForm.name()" />
+      </div>
+
+      <fieldset>
+        <legend class="font-medium">Billed</legend>
+        <div class="mt-1 flex gap-6">
+          @for (interval of intervals; track interval.value) {
+            <label class="flex items-center gap-2">
+              <input
+                type="radio"
+                [value]="interval.value"
+                [formField]="subscriptionForm.interval"
+              />
+              {{ interval.label }}
+            </label>
+          }
+        </div>
+      </fieldset>
+
+      <div class="grid gap-5 sm:grid-cols-2">
+        <div>
+          <label for="cost" class="block font-medium">
+            Price per billing (CHF) <span aria-hidden="true">*</span>
+          </label>
+          <input
+            id="cost"
+            inputmode="decimal"
+            class="field"
+            placeholder="18.90"
+            aria-required="true"
+            aria-describedby="cost-hint cost-errors"
+            [attr.aria-invalid]="
+              subscriptionForm.cost().touched() && subscriptionForm.cost().invalid()
+            "
+            [formField]="subscriptionForm.cost"
+          />
+          <p id="cost-hint" class="mt-1 text-sm text-gray-600">
+            From the first billing on.
+            @if (monthlyHint()) {
+              That is {{ monthlyHint() }}.
+            }
+          </p>
+          <app-field-errors errorId="cost-errors" [field]="subscriptionForm.cost()" />
+        </div>
+        <div>
+          <label for="startDate" class="block font-medium">
+            First billing <span aria-hidden="true">*</span>
+          </label>
+          <input
+            id="startDate"
+            type="date"
+            class="field"
+            aria-required="true"
+            aria-describedby="startDate-hint startDate-errors"
+            [attr.aria-invalid]="
+              subscriptionForm.startDate().touched() && subscriptionForm.startDate().invalid()
+            "
+            [formField]="subscriptionForm.startDate"
+          />
+          <p id="startDate-hint" class="mt-1 text-sm text-gray-600">
+            Later billings fall on the same day.
+          </p>
+          <app-field-errors errorId="startDate-errors" [field]="subscriptionForm.startDate()" />
+        </div>
+      </div>
+
+      <div class="sm:w-1/2 sm:pr-2.5">
+        <label for="endDate" class="block font-medium">Cancelled as of</label>
+        <input
+          id="endDate"
+          type="date"
+          class="field"
+          aria-describedby="endDate-hint endDate-errors"
+          [attr.aria-invalid]="
+            subscriptionForm.endDate().touched() && subscriptionForm.endDate().invalid()
+          "
+          [formField]="subscriptionForm.endDate"
+        />
+        <p id="endDate-hint" class="mt-1 text-sm text-gray-600">
+          Leave empty while it runs. Billings after this date are not counted.
+        </p>
+        <app-field-errors errorId="endDate-errors" [field]="subscriptionForm.endDate()" />
+      </div>
+
+      <div class="sm:w-1/2 sm:pr-2.5">
+        <label for="noticeMonths" class="block font-medium">Notice period</label>
+        <select
+          id="noticeMonths"
+          class="field"
+          aria-describedby="noticeMonths-hint"
+          [formField]="subscriptionForm.noticeMonths"
+        >
+          <option value="">None, cancel any time</option>
+          @for (option of noticeChoices(); track option.value) {
+            <option [value]="option.value">{{ option.label }}</option>
+          }
+        </select>
+        <p id="noticeMonths-hint" class="mt-1 text-sm text-gray-600">
+          The contract renews every year on the day of the first billing. With a notice period, you
+          get an email reminder before the cancellation deadline, with about a third of the notice
+          period left to act (at least a week).
+        </p>
+      </div>
+
+      <fieldset aria-describedby="changes-hint">
+        <legend class="font-medium">Price changes</legend>
+        <p id="changes-hint" class="text-sm text-gray-600">
+          Earlier billings keep their price, so past costs stay correct.
+        </p>
+        @for (change of subscriptionForm.priceChanges; track change; let i = $index) {
+          <div class="mt-3 grid items-start gap-3 sm:grid-cols-[1fr_1fr_auto]">
+            <div>
+              <label [for]="'change-date-' + i" class="block text-sm font-medium">
+                Price from
+              </label>
+              <input
+                type="date"
+                class="field"
+                [id]="'change-date-' + i"
+                [attr.aria-describedby]="'change-date-errors-' + i"
+                [attr.aria-invalid]="change.validFrom().touched() && change.validFrom().invalid()"
+                [formField]="change.validFrom"
+              />
+              <app-field-errors
+                [errorId]="'change-date-errors-' + i"
+                [field]="change.validFrom()"
+              />
+            </div>
+            <div>
+              <label [for]="'change-cost-' + i" class="block text-sm font-medium">
+                New price (CHF)
+              </label>
+              <input
+                inputmode="decimal"
+                class="field"
+                [id]="'change-cost-' + i"
+                [attr.aria-describedby]="'change-cost-errors-' + i"
+                [attr.aria-invalid]="change.cost().touched() && change.cost().invalid()"
+                [formField]="change.cost"
+              />
+              <app-field-errors [errorId]="'change-cost-errors-' + i" [field]="change.cost()" />
+            </div>
+            <button
+              type="button"
+              class="btn-secondary sm:mt-7"
+              [attr.aria-label]="'Remove price change ' + (i + 1)"
+              (click)="removePriceChange(i)"
+            >
+              Remove
+            </button>
+          </div>
+        }
+        @if (model().priceChanges.length < maxPriceChanges) {
+          <button #addButton type="button" class="btn-secondary mt-3" (click)="addPriceChange()">
+            Add price change
+          </button>
+        }
+      </fieldset>
+
+      @if (saveError()) {
+        <p role="alert" class="rounded border border-red-300 bg-red-50 p-3 text-red-800">
+          {{ saveError() }}
+        </p>
+      }
+
+      <div class="flex gap-3">
+        <button type="submit" class="btn-primary" [disabled]="subscriptionForm().submitting()">
+          Save
+        </button>
+        <a routerLink="/finance/subscriptions" class="btn-secondary">Cancel</a>
+      </div>
+    </form>
+  }
+</section>
