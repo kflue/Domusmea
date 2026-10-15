@@ -1,10 +1,36 @@
 import { describe, expect, it } from 'vitest';
-import { formatChf, formatDate, formatDateTime, todayIn } from './format';
+import {
+  formatAmount,
+  formatChf,
+  formatDate,
+  formatDateTime,
+  formatFrancs,
+  formatPercentChange,
+  formatUnitPrice,
+  todayIn,
+} from './format';
 
 describe('formatChf', () => {
   it('formats Rappen as Swiss francs with thousands separator', () => {
     expect(formatChf(123450)).toMatch(/^CHF\s1.234\.50$/);
     expect(formatChf(0)).toMatch(/^CHF\s0\.00$/);
+  });
+});
+
+describe('formatFrancs, formatAmount and formatUnitPrice', () => {
+  it('format numbers for columns that state the unit in the header', () => {
+    expect(formatFrancs(123450)).toMatch(/^1.234\.50$/);
+    expect(formatFrancs(-50)).toMatch(/^[-−]0\.50$/);
+    expect(formatAmount(1_234_500)).toMatch(/^1.234\.5$/);
+    expect(formatAmount(21_000)).toBe('21');
+    expect(formatAmount(125)).toBe('0.125');
+    expect(formatUnitPrice(28.7)).toBe('0.2870');
+  });
+
+  it('formats a change in percent with its sign', () => {
+    expect(formatPercentChange(12.34)).toMatch(/^\+12\.3\s?%$/);
+    expect(formatPercentChange(-4)).toMatch(/^[-−]4\.0\s?%$/);
+    expect(formatPercentChange(0)).toMatch(/^0\.0\s?%$/);
   });
 });
 

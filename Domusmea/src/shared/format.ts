@@ -5,6 +5,42 @@ export function formatChf(rappen: number): string {
   return chfFormat.format(rappen / 100);
 }
 
+const numberFormat = (fractionDigits: number, maxFractionDigits = fractionDigits) =>
+  new Intl.NumberFormat('de-CH', {
+    minimumFractionDigits: fractionDigits,
+    maximumFractionDigits: maxFractionDigits,
+  });
+const francsFormat = numberFormat(2);
+const amountFormat = numberFormat(0, 3);
+const unitPriceFormat = numberFormat(4);
+
+/** Rappen as francs without the currency, for columns headed "(CHF)": `123450` → `1’234.50`. */
+export function formatFrancs(rappen: number): string {
+  return francsFormat.format(rappen / 100);
+}
+
+/** An amount in thousandths of its unit, up to 3 decimals: `1234500` → `1’234.5`. */
+export function formatAmount(milli: number): string {
+  return amountFormat.format(milli / 1000);
+}
+
+/** A price per unit with 4 decimals, from Rappen per unit: `28.7` → `0.2870`. */
+export function formatUnitPrice(rappenPerUnit: number): string {
+  return unitPriceFormat.format(rappenPerUnit / 100);
+}
+
+const percentChangeFormat = new Intl.NumberFormat('de-CH', {
+  style: 'percent',
+  signDisplay: 'exceptZero',
+  minimumFractionDigits: 1,
+  maximumFractionDigits: 1,
+});
+
+/** A change in percent with its sign: `12.34` → `+12.3%`, `-4` → `-4.0%`. */
+export function formatPercentChange(percent: number): string {
+  return percentChangeFormat.format(percent / 100);
+}
+
 /** Formats a `YYYY-MM-DD` date as `DD.MM.YYYY` without going through `Date` (no time zone shifts). */
 export function formatDate(isoDate: string): string {
   const [year, month, day] = isoDate.split('-');

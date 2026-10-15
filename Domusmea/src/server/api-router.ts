@@ -12,6 +12,8 @@ import { JournalRepository } from './journal/journal-repository';
 import { createJournalRouter } from './journal/journal-router';
 import { SubscriptionRepository } from './subscriptions/subscription-repository';
 import { createSubscriptionsRouter } from './subscriptions/subscriptions-router';
+import { createUtilitiesRouter } from './utilities/utilities-router';
+import { UtilityRepository } from './utilities/utility-repository';
 
 /** Repositories are resolved per request so the database is only opened when the API is used. */
 export interface ApiServices {
@@ -19,6 +21,7 @@ export interface ApiServices {
   items: () => ItemRepository;
   journal: () => JournalRepository;
   subscriptions: () => SubscriptionRepository;
+  utilities: () => UtilityRepository;
   emailSettings: () => EmailSettingsRepository;
   today: () => string;
   /** See `AuthRouterOptions.allowRemoteSetup`. */
@@ -65,6 +68,11 @@ export function createApiRouter(services: ApiServices): Router {
     '/subscriptions',
     requirePermissions({ read: 'finance:read', write: 'finance:write' }),
     createSubscriptionsRouter(services.subscriptions),
+  );
+  router.use(
+    '/utilities',
+    requirePermissions({ read: 'finance:read', write: 'finance:write' }),
+    createUtilitiesRouter(services.utilities),
   );
   router.use(
     '/settings/email',

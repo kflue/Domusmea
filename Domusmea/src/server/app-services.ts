@@ -9,6 +9,7 @@ import { Clock, ItemRepository } from './items/item-repository';
 import { JournalRepository } from './journal/journal-repository';
 import { startCancellationReminder } from './subscriptions/cancellation-reminder';
 import { SubscriptionRepository } from './subscriptions/subscription-repository';
+import { UtilityRepository } from './utilities/utility-repository';
 import { startWarrantyNotifier } from './warranty/warranty-notifier';
 
 /**
@@ -33,6 +34,7 @@ let auth: AuthRepository | undefined;
 let items: ItemRepository | undefined;
 let journal: JournalRepository | undefined;
 let subscriptions: SubscriptionRepository | undefined;
+let utilities: UtilityRepository | undefined;
 let emailSettings: EmailSettingsRepository | undefined;
 
 function db(): DatabaseSync {
@@ -58,6 +60,11 @@ export function journalRepository(): JournalRepository {
 export function subscriptionRepository(): SubscriptionRepository {
   subscriptions ??= new SubscriptionRepository(db(), clock.now);
   return subscriptions;
+}
+
+export function utilityRepository(): UtilityRepository {
+  utilities ??= new UtilityRepository(db(), clock.now);
+  return utilities;
 }
 
 export function emailSettingsRepository(): EmailSettingsRepository {

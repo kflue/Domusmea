@@ -19,8 +19,19 @@ export function parseChf(text: string): number | null | undefined {
   return Number.isSafeInteger(rappen) ? rappen : undefined;
 }
 
-/** Rappen as an editable amount, e.g. `129950` → `1299.50`. */
+/** Like {@link parseChf}, but also accepts a leading minus for credits, e.g. `-12.50`. */
+export function parseSignedChf(text: string): number | null | undefined {
+  const trimmed = text.trim();
+  if (!trimmed.startsWith('-')) {
+    return parseChf(trimmed);
+  }
+  const rappen = parseChf(trimmed.slice(1));
+  return typeof rappen === 'number' ? -rappen : undefined;
+}
+
+/** Rappen as an editable amount, e.g. `129950` → `1299.50`, `-50` → `-0.50`. */
 export function rappenToChfText(rappen: number): string {
-  const francs = Math.trunc(rappen / 100);
-  return `${francs}.${String(rappen % 100).padStart(2, '0')}`;
+  const sign = rappen < 0 ? '-' : '';
+  const abs = Math.abs(rappen);
+  return `${sign}${Math.trunc(abs / 100)}.${String(abs % 100).padStart(2, '0')}`;
 }

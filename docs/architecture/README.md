@@ -14,6 +14,7 @@ Browser ──HTTP──▶ Express (src/server.ts)
                    │   ├─ /items          ──▶ src/server/items/ ──▶ SQLite (src/server/db.ts)
                    │   ├─ /journal        ──▶ src/server/journal/ ──▶ SQLite (repairs, investments)
                    │   ├─ /subscriptions  ──▶ src/server/subscriptions/ ──▶ SQLite (with price history)
+                   │   ├─ /utilities      ──▶ src/server/utilities/ ──▶ SQLite (utility bills)
                    │   └─ /settings/email ──▶ src/server/email/ ──▶ SQLite, SMTP (test email)
                    ├─ static files (dist/browser)
                    └─ Angular SSR (AngularNodeAppEngine)
@@ -63,17 +64,19 @@ reset with `npm run reset-login` (after `npm run build`), which brings back `adm
 
 ## Decisions
 
-| ADR                                                | Decision                                                                  |
-| -------------------------------------------------- | ------------------------------------------------------------------------- |
-| [0001](adr/0001-single-app-layered-backend.md)     | Single Angular SSR app; backend layered inside it                         |
-| [0002](adr/0002-sqlite-with-node-sqlite.md)        | SQLite through Node's built-in `node:sqlite`                              |
-| [0003](adr/0003-warranty-expiry-notifications.md)  | In-process hourly warranty check, email via SMTP                          |
-| [0004](adr/0004-money-and-dates.md)                | CHF stored as integer Rappen; dates as ISO strings                        |
-| [0005](adr/0005-no-login-network-safeguards.md)    | No login yet; host allowlist, local binding and other API safeguards      |
-| [0006](adr/0006-email-settings-in-database.md)     | SMTP server and recipients set in the UI, password encrypted              |
-| [0007](adr/0007-login-and-roles.md)                | Login with one owner account, roles as permission sets                    |
-| [0008](adr/0008-side-navigation.md)                | Collapsible side navigation, topics registered per feature                |
-| [0009](adr/0009-subscriptions-and-finance-area.md) | Subscriptions with price history, costs derived in `src/shared`           |
-| [0010](adr/0010-cancellation-reminders.md)         | Email reminder a third of the notice period before cancellation deadlines |
+| ADR                                                    | Decision                                                                  |
+| ------------------------------------------------------ | ------------------------------------------------------------------------- |
+| [0001](adr/0001-single-app-layered-backend.md)         | Single Angular SSR app; backend layered inside it                         |
+| [0002](adr/0002-sqlite-with-node-sqlite.md)            | SQLite through Node's built-in `node:sqlite`                              |
+| [0003](adr/0003-warranty-expiry-notifications.md)      | In-process hourly warranty check, email via SMTP                          |
+| [0004](adr/0004-money-and-dates.md)                    | CHF stored as integer Rappen; dates as ISO strings                        |
+| [0005](adr/0005-no-login-network-safeguards.md)        | No login yet; host allowlist, local binding and other API safeguards      |
+| [0006](adr/0006-email-settings-in-database.md)         | SMTP server and recipients set in the UI, password encrypted              |
+| [0007](adr/0007-login-and-roles.md)                    | Login with one owner account, roles as permission sets                    |
+| [0008](adr/0008-side-navigation.md)                    | Collapsible side navigation, topics registered per feature                |
+| [0009](adr/0009-subscriptions-and-finance-area.md)     | Subscriptions with price history, costs derived in `src/shared`           |
+| [0010](adr/0010-cancellation-reminders.md)             | Email reminder a third of the notice period before cancellation deadlines |
+| [0011](adr/0011-utility-bills-and-charts.md)           | Utility bills per commodity; charts with Chart.js, loaded lazily          |
+| [0012](adr/0012-utility-comparisons-and-bill-notes.md) | Like-for-like year comparison, monthly utility cost, notes per bill       |
 
 New decisions get the next number; superseded ADRs stay and are marked as such.

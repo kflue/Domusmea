@@ -31,6 +31,11 @@ export const routes: Routes = [
     loadChildren: () => import('./finance/finance.routes').then((m) => m.financeRoutes),
   },
   {
+    path: 'utilities',
+    canActivate: [signedInGuard],
+    loadChildren: () => import('./utilities/utilities.routes').then((m) => m.utilityRoutes),
+  },
+  {
     path: 'settings',
     canActivate: [signedInGuard],
     loadChildren: () => import('./settings/settings.routes').then((m) => m.settingsRoutes),

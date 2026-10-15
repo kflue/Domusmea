@@ -80,6 +80,12 @@ Workflow rules).
   computed by `src/shared/subscription-costs.ts`; reuse it for the finance dashboard. Cancellation
   deadlines and the hourly reminder email: `src/shared/cancellation.ts`, ADR 0010. Background jobs use
   `startPeriodicCheck` (`src/server/periodic-check.ts`).
+- Energy & utilities `/utilities` (ADR 0011): quarterly bills, one entry per commodity, API
+  `/api/utilities` (`finance:*` permissions). Commodities and units in `src/shared/utility.ts`, totals
+  in `src/shared/utility-costs.ts`; the finance dashboard gets the utility cost per month only from
+  its `paidRappen` (ADR 0012). Charts use Chart.js, imported only through `CHART_FACTORY`
+  (`utility-chart/`) so it stays a lazy, browser-only chunk. Hide write controls with
+  `AuthApi.can(...)` and guard form routes with `permissionGuard(...)`.
 
 ## Dev environment
 

@@ -7,7 +7,13 @@ import { RouterTestingHarness } from '@angular/router/testing';
 import { firstValueFrom } from 'rxjs';
 import { SessionUser } from '../../shared/auth';
 import { AuthApi } from './auth-api';
-import { authInterceptor, setupGuard, signedInGuard, signedOutGuard } from './auth-guards';
+import {
+  authInterceptor,
+  permissionGuard,
+  setupGuard,
+  signedInGuard,
+  signedOutGuard,
+} from './auth-guards';
 
 @Component({ template: 'page' })
 class Page {}
@@ -32,6 +38,11 @@ describe('auth guards', () => {
           { path: 'login', canActivate: [signedOutGuard], component: Page },
           { path: 'setup', canActivate: [setupGuard], component: Page },
           { path: 'items', canActivate: [signedInGuard], component: Page },
+          {
+            path: 'edit',
+            canActivate: [signedInGuard, permissionGuard('finance:write')],
+            component: Page,
+          },
           { path: '', component: Page },
         ]),
       ],
@@ -67,6 +78,17 @@ describe('auth guards', () => {
     expect(TestBed.inject(Router).url).toBe('/');
     await harness.navigateByUrl('/login');
     expect(TestBed.inject(Router).url).toBe('/');
+  });
+
+  it('keeps users without the permission away from pages behind permissionGuard', async () => {
+    expect(await navigate('/edit', { ...anna, permissions: ['finance:read'] })).toBe('/');
+    expect(TestBed.inject(AuthApi).can('finance:read')).toBe(true);
+  });
+
+  it('lets users with the permission in', async () => {
+    expect(await navigate('/edit', { ...anna, permissions: ['finance:write'] })).toBe('/edit');
+    expect(TestBed.inject(AuthApi).can('finance:write')).toBe(true);
+    expect(TestBed.inject(AuthApi).can('finance:read')).toBe(false);
   });
 
   it('sends the user to the login when the API reports an ended session', async () => {

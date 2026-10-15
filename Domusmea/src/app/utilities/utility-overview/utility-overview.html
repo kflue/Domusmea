@@ -1,0 +1,152 @@
+<section>
+  <div class="mb-6 flex flex-wrap items-center justify-between gap-3">
+    <h1 class="text-2xl font-semibold">Energy &amp; utilities</h1>
+    @if (canWrite()) {
+      <a routerLink="/utilities/new" class="btn-primary">Add bill</a>
+    }
+  </div>
+
+  @if (deleteError()) {
+    <p role="alert" class="mb-4 rounded border border-red-300 bg-red-50 p-3 text-red-800">
+      {{ deleteError() }}
+    </p>
+  }
+
+  @if (list.error()) {
+    <p role="alert" class="rounded border border-red-300 bg-red-50 p-3 text-red-800">
+      The utility bills could not be loaded.
+      <button type="button" class="underline" (click)="list.reload()">Try again</button>
+    </p>
+  } @else if (!list.hasValue()) {
+    <p aria-live="polite">Loading…</p>
+  } @else if (isEmpty()) {
+    <p class="text-gray-700">
+      No bills yet. Enter a quarterly bill with electricity, water, waste water and garbage to see
+      your usage and cost per period, with charts and yearly totals.
+    </p>
+    @if (canWrite()) {
+      <a routerLink="/utilities/new" class="btn-secondary mt-4">Add the first bill</a>
+    }
+  } @else {
+    @if (lastTwelveMonths(); as summary) {
+      <section class="mb-8" aria-labelledby="last-twelve-heading">
+        <h2 id="last-twelve-heading" class="text-sm text-gray-600">
+          Last 12 billed months ({{ summary.range }})
+        </h2>
+        <dl class="mt-1 flex flex-wrap gap-6">
+          <div>
+            <dt class="text-sm text-gray-600">All utilities</dt>
+            <dd class="text-lg font-semibold whitespace-nowrap">{{ summary.total }}</dd>
+          </div>
+          @for (item of summary.commodities; track item.label) {
+            <div>
+              <dt class="text-sm text-gray-600">{{ item.label }}</dt>
+              <dd class="font-semibold whitespace-nowrap">{{ item.cost }}</dd>
+            </div>
+          }
+        </dl>
+      </section>
+    }
+
+    <section class="mb-10" aria-labelledby="year-comparison-heading">
+      <h2 id="year-comparison-heading" class="mb-3 text-xl font-semibold">Year over year</h2>
+      <app-utility-year-comparison [entries]="entries()" />
+    </section>
+
+    @for (section of sections(); track section.commodity) {
+      <section class="mb-10" [attr.aria-labelledby]="section.commodity + '-heading'">
+        <h2 [id]="section.commodity + '-heading'" tabindex="-1" class="mb-3 text-xl font-semibold">
+          {{ section.info.label }}
+          @if (section.info.unit) {
+            <span class="font-normal text-gray-600">({{ section.info.unit }})</span>
+          } @else {
+            <span class="font-normal text-gray-600">(flat fee)</span>
+          }
+        </h2>
+
+        @if (section.rows.length === 0) {
+          <p class="text-gray-700">No {{ section.info.label.toLowerCase() }} entries yet.</p>
+        } @else {
+          <app-utility-chart
+            class="mb-4 block"
+            [periods]="section.chart"
+            [unit]="section.info.unit"
+            [label]="section.chartLabel"
+          />
+          <div class="overflow-x-auto">
+            <table class="w-full border-collapse text-left">
+              <caption class="sr-only">
+                {{
+                  section.info.label
+                }}
+                per billing period, newest first, with a total per year
+              </caption>
+              <thead>
+                <tr class="border-b border-gray-300">
+                  <th scope="col" class="p-2">Period</th>
+                  @for (column of section.columns; track column) {
+                    <th scope="col" class="p-2 text-right">{{ column }}</th>
+                  }
+                  @if (canWrite()) {
+                    <th scope="col" class="p-2"><span class="sr-only">Actions</span></th>
+                  }
+                </tr>
+              </thead>
+              <tbody>
+                @for (row of section.rows; track row.key) {
+                  <tr
+                    class="border-b align-top"
+                    [class]="
+                      row.entry ? 'border-gray-200' : 'border-gray-300 bg-gray-50 font-semibold'
+                    "
+                  >
+                    <th scope="row" class="p-2 whitespace-nowrap" [class.font-medium]="row.entry">
+                      {{ row.period }}
+                      @if (row.dates) {
+                        <span class="block text-sm font-normal text-gray-600">{{ row.dates }}</span>
+                      }
+                      @if (row.invoice) {
+                        <span class="block text-sm font-normal text-gray-600">{{
+                          row.invoice
+                        }}</span>
+                      }
+                      @if (row.notes) {
+                        <span
+                          class="block max-w-xs text-sm font-normal whitespace-pre-line text-gray-600"
+                          >{{ row.notes }}</span
+                        >
+                      }
+                    </th>
+                    @for (cell of row.cells; track $index) {
+                      <td class="p-2 text-right whitespace-nowrap tabular-nums">{{ cell }}</td>
+                    }
+                    @if (canWrite()) {
+                      <td class="p-2 text-right whitespace-nowrap">
+                        @if (row.entry) {
+                          <a
+                            class="btn-secondary mr-2"
+                            [routerLink]="['/utilities', row.entry.id]"
+                            [attr.aria-label]="'Edit ' + entryName(section, row)"
+                          >
+                            Edit
+                          </a>
+                          <app-confirm-delete
+                            [name]="entryName(section, row)"
+                            (confirmed)="delete(section, row)"
+                          />
+                        }
+                      </td>
+                    }
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+          <p class="mt-2 text-sm text-gray-600">
+            A period spanning two years counts towards the year in which it ends.
+          </p>
+        }
+      </section>
+    }
+  }
+</section>
