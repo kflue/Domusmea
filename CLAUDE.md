@@ -55,7 +55,8 @@ Workflow rules).
   Feature code lives in `src/server/<feature>/` (repository with SQL + router with zod validation);
   types shared with the UI in `src/shared/`. `src/app` and `src/server` never import each other.
 - Data: SQLite through Node's built-in `node:sqlite` (`src/server/db.ts`, numbered migrations via
-  `PRAGMA user_version`). `node:sqlite` is listed in `externalDependencies` in `angular.json` because
+  `PRAGMA user_version`, run with foreign keys off and checked before commit so tables can be
+  rebuilt; schema in `docs/architecture/data-model.md`, keep it in sync). `node:sqlite` is listed in `externalDependencies` in `angular.json` because
   esbuild would otherwise rewrite it to a bare `sqlite` import.
 - Login (ADR 0007): everything under `/api` except `/api/auth` needs a session; mount new routers in
   `api-router.ts` after `requireSession` with `requirePermissions(...)`, and add them to the route list
@@ -87,8 +88,9 @@ Workflow rules).
   its `paidRappen` (ADR 0012). Charts use Chart.js, imported only through `CHART_FACTORY`
   (`utility-chart/`) so it stays a lazy, browser-only chunk. Hide write controls with
   `AuthApi.can(...)` and guard form routes with `permissionGuard(...)`.
-- Finance dashboard `/finance` (ADR 0013, 0014): it only combines _finance sources_, opex (running
-  costs per month) or capex (investments per year; the journal, planned = dated after today). To
+- Finance dashboard `/finance` (ADR 0013, 0014, 0017): it only combines _finance sources_, opex
+  (running costs per month; subscriptions, utilities, repairs from the journal) or capex (investments
+  per year; item purchases only, planned = purchase date after today). To
   add a cost category, write a pure function returning `OpexFigures` or `CapexFigures`
   (`src/shared/finance-totals.ts`) in
   `src/shared/`, a `<feature>.finance.ts` whose `load` uses `import()` for everything but types, and

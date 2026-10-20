@@ -8,7 +8,6 @@ import { JournalRepository } from './journal-repository';
 
 const emptyInput: JournalEntryInput = {
   date: '2026-09-01',
-  kind: 'repair',
   title: 'Fixed leaking tap',
   costRappen: null,
   contractor: null,
@@ -43,8 +42,8 @@ describe('JournalRepository', () => {
       updatedAt: '2026-10-14T08:00:00.000Z',
     });
 
-    const updated = repository.update(created.id, { ...emptyInput, kind: 'investment' });
-    expect(updated).toMatchObject({ id: 1, kind: 'investment', contractor: null, notes: null });
+    const updated = repository.update(created.id, { ...emptyInput, title: 'Tap replaced' });
+    expect(updated).toMatchObject({ id: 1, title: 'Tap replaced', contractor: null, notes: null });
 
     expect(repository.delete(created.id)).toBe(true);
     expect(repository.get(created.id)).toBeUndefined();
@@ -65,7 +64,7 @@ describe('JournalRepository', () => {
     const boiler = items.create({
       name: 'Boiler',
       category: 'appliance',
-      purchaseDate: null,
+      purchaseDate: '2026-01-15',
       costRappen: null,
       warrantyExpires: null,
       manufacturer: null,

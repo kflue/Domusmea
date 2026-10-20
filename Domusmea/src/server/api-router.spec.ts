@@ -86,7 +86,10 @@ describe('API router', () => {
     fetch(baseUrl + path, {
       method,
       headers: { 'content-type': 'application/json', ...(cookie ? { cookie } : {}) },
-      body: method === 'GET' || method === 'DELETE' ? undefined : JSON.stringify({ name: 'Roof' }),
+      body:
+        method === 'GET' || method === 'DELETE'
+          ? undefined
+          : JSON.stringify({ name: 'Roof', purchaseDate: '2010-06-01' }),
     });
 
   const sessionCookie = (id: number) => `domusmea_session=${auth.createSession(id)}`;

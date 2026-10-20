@@ -18,7 +18,8 @@ export interface Item {
   id: number;
   name: string;
   category: ItemCategory | null;
-  purchaseDate: string | null;
+  /** Required (ADR 0017): it sets the item's capex year. */
+  purchaseDate: string;
   costRappen: number | null;
   warrantyExpires: string | null;
   manufacturer: string | null;

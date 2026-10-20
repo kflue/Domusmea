@@ -17,7 +17,7 @@ export const itemInputSchema = z
       .enum(ITEM_CATEGORIES)
       .nullish()
       .transform((value) => value ?? null),
-    purchaseDate: optionalDate,
+    purchaseDate: z.iso.date(),
     costRappen: z
       .number()
       .int()
@@ -31,8 +31,7 @@ export const itemInputSchema = z
     serialNumber: itemText,
     seller: itemText,
   })
-  .refine(
-    (item) =>
-      !item.purchaseDate || !item.warrantyExpires || item.warrantyExpires >= item.purchaseDate,
-    { path: ['warrantyExpires'], message: 'Must not be before the purchase date' },
-  ) satisfies z.ZodType<ItemInput, unknown>;
+  .refine((item) => !item.warrantyExpires || item.warrantyExpires >= item.purchaseDate, {
+    path: ['warrantyExpires'],
+    message: 'Must not be before the purchase date',
+  }) satisfies z.ZodType<ItemInput, unknown>;

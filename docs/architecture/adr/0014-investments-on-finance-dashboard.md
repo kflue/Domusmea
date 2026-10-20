@@ -1,6 +1,7 @@
 # 0014: Investments on the finance dashboard
 
-- Status: accepted
+- Status: accepted; the journal parts (investments as journal entries, category of the linked
+  item) are superseded by [0017](0017-repairs-as-running-cost.md)
 - Date: 2026-10-15
 
 ## Context

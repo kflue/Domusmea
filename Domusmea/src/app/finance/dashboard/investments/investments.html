@@ -18,8 +18,8 @@
 
     @if (isEmpty()) {
       <p class="text-gray-700">
-        No investments with a cost yet. Record past and planned investments, with a date in the
-        future for plans, to budget the coming years:
+        No investments with a cost yet. Enter appliances and building parts with their cost, with a
+        purchase date in the future for plans, to budget the coming years:
       </p>
       <ul class="mt-2 list-disc pl-6">
         @for (source of sources(); track source.id) {
@@ -68,8 +68,8 @@
         periodHeader="Year"
       />
       <p class="text-sm text-gray-600">
-        Investments dated after today count as planned; once their date has passed they count as
-        spent. They are grouped by the category of the appliance or building part they belong to.
+        Items bought after today count as planned; once their purchase date has passed they count as
+        spent. They are grouped by their category.
       </p>
     }
   }

@@ -86,7 +86,7 @@ function describe(item: Item): string {
     ['Model', item.model],
     ['Serial number', item.serialNumber],
     ['Bought from', item.seller],
-    ['Purchased', item.purchaseDate && formatDate(item.purchaseDate)],
+    ['Purchased', formatDate(item.purchaseDate)],
     ['Cost', item.costRappen === null ? null : formatChf(item.costRappen)],
   ];
   return [

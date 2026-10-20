@@ -8,7 +8,6 @@ import { JournalList } from './journal-list';
 const baseEntry: JournalEntry = {
   id: 1,
   date: '2026-09-01',
-  kind: 'repair',
   title: 'Boiler serviced',
   costRappen: 45000,
   contractor: 'Heizung Meier AG',
@@ -25,8 +24,7 @@ const entries: JournalEntry[] = [
     ...baseEntry,
     id: 2,
     date: '2026-03-15',
-    kind: 'investment',
-    title: 'Solar panels',
+    title: 'Roof tiles replaced',
     costRappen: 2000000,
     contractor: null,
     itemId: null,
@@ -69,18 +67,15 @@ describe('JournalList', () => {
   const rowTexts = (element: HTMLElement) =>
     [...element.querySelectorAll('tbody tr')].map((row) => row.textContent ?? '');
 
-  it('shows entries with item, contractor and totals per kind', async () => {
+  it('shows repairs with item, contractor and their total', async () => {
     const { element } = await render(entries);
     const rows = rowTexts(element);
 
     expect(rows).toHaveLength(3);
     expect(rows[0]).toContain('01.09.2026');
     expect(rows[0]).toContain('Boiler · Heizung Meier AG');
-    expect(rows[0]).toContain('Repair or maintenance');
     expect(rows[0]).toMatch(/CHF\s450\.00/);
     const totals = element.querySelector('dl')?.textContent ?? '';
-    expect(totals).toMatch(/Repair or maintenance\s*CHF\s750\.00/);
-    expect(totals).toMatch(/Investment\s*CHF\s20.000\.00/);
     expect(totals).toMatch(/Total\s*CHF\s20.750\.00/);
   });
 
@@ -99,7 +94,7 @@ describe('JournalList', () => {
 
   it('invites to add the first entry when the journal is empty', async () => {
     const { element } = await render([]);
-    expect(element.textContent).toContain('No entries yet.');
+    expect(element.textContent).toContain('No repairs yet.');
     expect(element.querySelector('table')).toBeNull();
   });
 

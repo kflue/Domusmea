@@ -62,8 +62,8 @@ function capex(id: string, figures: CapexFigures | Error): () => FinanceSource {
     kind: 'capex',
     id,
     label: 'Investments',
-    permission: 'journal:read',
-    link: '/journal',
+    permission: 'items:read',
+    link: '/items',
     order: 10,
     load: () => (figures instanceof Error ? Promise.reject(figures) : Promise.resolve(figures)),
   });
@@ -76,13 +76,13 @@ const row = (offset: number, category: string, spentRappen: number, plannedRappe
   spentRappen,
   plannedRappen,
 });
-const journal = capex('journal', {
+const items = capex('items', {
   years: [
     row(-1, 'appliance', 500_000),
     row(0, 'other', 1_800_000, 1_200_000),
     row(2, 'appliance', 0, 300_000),
   ],
-  notes: ['3 investments without cost'],
+  notes: ['3 items without cost'],
 });
 
 describe('FinanceDashboard', () => {
@@ -210,6 +210,32 @@ describe('FinanceDashboard', () => {
     expect(kpis()[0]).toMatch(/CHF\s85\.00$/);
   });
 
+  it('shows the notes of opex sources under the tile', async () => {
+    setup([
+      subscriptions,
+      opex('repairs', 30, {
+        currentMonthlyRappen: 0,
+        monthly: {},
+        notes: ['2 repairs without cost'],
+      }),
+    ]);
+    const { section } = await render();
+    expect(section('app-running-costs')?.textContent).toContain('2 repairs without cost');
+  });
+
+  it('shows the notes also when there are no running costs yet', async () => {
+    setup([
+      opex('repairs', 30, {
+        currentMonthlyRappen: 0,
+        monthly: {},
+        notes: ['1 repair without cost'],
+      }),
+    ]);
+    const { section } = await render();
+    expect(section('app-running-costs')?.textContent).toContain('No running costs yet');
+    expect(section('app-running-costs')?.textContent).toContain('1 repair without cost');
+  });
+
   it('explains itself without any data and links to where costs are entered (R1)', async () => {
     setup([empty('subscriptions', 10), empty('utilities', 20)]);
     const { element, chartData } = await render();
@@ -222,8 +248,8 @@ describe('FinanceDashboard', () => {
   });
 
   it('shows this year spent and planned and the plan for the next five years (R4)', async () => {
-    setup([subscriptions, journal]);
-    const { section, kpis } = await render(['finance:read', 'journal:read']);
+    setup([subscriptions, items]);
+    const { section, kpis } = await render(['finance:read', 'items:read']);
     expect(kpis('app-investments')).toEqual([
       expect.stringMatching(
         new RegExp(
@@ -232,12 +258,12 @@ describe('FinanceDashboard', () => {
       ),
       expect.stringMatching(new RegExp(`^Planned ${year + 1}–${year + 5} CHF\\s3.000\\.00$`)),
     ]);
-    expect(section('app-investments')?.textContent).toContain('3 investments without cost');
+    expect(section('app-investments')?.textContent).toContain('3 items without cost');
   });
 
   it('draws past and planned years per category, the current year split (R5)', async () => {
-    setup([journal]);
-    const { capexData } = await render(['finance:read', 'journal:read']);
+    setup([items]);
+    const { capexData } = await render(['finance:read', 'items:read']);
     const data = capexData()!;
     expect(data.periods).toEqual([
       String(year - 1),
@@ -254,16 +280,16 @@ describe('FinanceDashboard', () => {
     expect(data.series[1].details?.[1]).toMatch(/^CHF\s18.000\.00 spent, CHF\s12.000\.00 planned$/);
   });
 
-  it('hides the investments without journal:read (story 8)', async () => {
-    setup([subscriptions, journal]);
+  it('hides the investments without items:read (story 8)', async () => {
+    setup([subscriptions, items]);
     const { element, kpis } = await render(['finance:read']);
     expect(element.querySelector('app-investments')).toBeNull();
     expect(kpis()[0]).toMatch(/CHF\s85\.00$/);
   });
 
   it('explains the investments without any and reports a failing capex source', async () => {
-    setup([capex('journal', { years: [], notes: [] }), capex('vehicles', new Error('offline'))]);
-    const { section } = await render(['finance:read', 'journal:read']);
+    setup([capex('items', { years: [], notes: [] }), capex('vehicles', new Error('offline'))]);
+    const { section } = await render(['finance:read', 'items:read']);
     const investments = section('app-investments')!;
     expect(investments.textContent).toContain('No investments with a cost yet');
     expect(investments.querySelector('[role="alert"]')?.textContent).toContain(

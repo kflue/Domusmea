@@ -11,7 +11,7 @@ describe('notifyExpiredWarranties', () => {
   let sent: Mail[];
   let deps: WarrantyNotifierDeps;
 
-  const item = { category: null, purchaseDate: null, costRappen: null, model: null };
+  const item = { category: null, purchaseDate: '2026-01-15', costRappen: null, model: null };
   const mailer: Mailer = { send: async (mail) => void sent.push(mail) };
 
   beforeEach(() => {

@@ -74,21 +74,19 @@ describe('JournalForm', () => {
     expect(options.map((option) => option.textContent?.trim())).toEqual(['None', 'Boiler', 'Roof']);
 
     await type('#date', '2026-10-01');
-    await type('#title', ' Heat pump installed ');
+    await type('#title', ' Heat pump serviced ');
     await type('#cost', "24'500");
-    element.querySelector<HTMLInputElement>('input[type="radio"][value="investment"]')!.click();
     await type('#itemId', '4');
-    await type('#notes', 'Replaces the oil heating.\nSubsidy requested.');
+    await type('#notes', 'Filter replaced.\nNext service in 2027.');
     await save();
 
     const request = http.expectOne({ method: 'POST', url: '/api/journal' });
     expect(request.request.body).toEqual({
       date: '2026-10-01',
-      kind: 'investment',
-      title: 'Heat pump installed',
+      title: 'Heat pump serviced',
       costRappen: 2450000,
       contractor: null,
-      notes: 'Replaces the oil heating.\nSubsidy requested.',
+      notes: 'Filter replaced.\nNext service in 2027.',
       itemId: 4,
     });
     request.flush({ id: 1 });
@@ -103,7 +101,6 @@ describe('JournalForm', () => {
     const { element, type, save } = await render({
       id: 7,
       date: '2025-06-01',
-      kind: 'repair',
       title: 'Gutter cleaned',
       costRappen: 30000,
       contractor: null,
@@ -113,7 +110,7 @@ describe('JournalForm', () => {
       createdAt: '2025-06-01T10:00:00.000Z',
       updatedAt: '2025-06-01T10:00:00.000Z',
     });
-    expect(element.querySelector('h1')?.textContent).toContain('Edit journal entry');
+    expect(element.querySelector('h1')?.textContent).toContain('Edit repair');
     expect(element.querySelector<HTMLSelectElement>('#itemId')?.value).toBe('5');
     expect(element.querySelector<HTMLInputElement>('#cost')?.value).toBe('300.00');
 

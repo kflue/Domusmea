@@ -2,11 +2,14 @@ import { mkdirSync } from 'node:fs';
 import { dirname } from 'node:path';
 import { DatabaseSync } from 'node:sqlite';
 
+/** A migration step: SQL, or a function for steps that also report on the data they change. */
+type Migration = string | ((db: DatabaseSync) => void);
+
 /**
  * Schema migrations; index + 1 is the resulting `PRAGMA user_version`. Append only, never edit an
  * applied migration (ADR 0002).
  */
-const MIGRATIONS: readonly string[] = [
+const MIGRATIONS: readonly Migration[] = [
   `CREATE TABLE items (
      id INTEGER PRIMARY KEY,
      name TEXT NOT NULL,
@@ -142,6 +145,72 @@ const MIGRATIONS: readonly string[] = [
    );
    CREATE INDEX utility_entries_commodity ON utility_entries (commodity, period_to);
    CREATE INDEX utility_entries_bill ON utility_entries (bill_id);`,
+  // The journal holds only repairs and items need a purchase date (ADR 0017). Investment entries are
+  // deleted; items without a purchase date get the day they were entered, or their warranty expiry
+  // if earlier, so they stay valid for the API. SQLite cannot drop a column with a CHECK or add
+  // NOT NULL, so both tables are rebuilt.
+  (db) => {
+    const undated = db
+      .prepare('SELECT id FROM items WHERE purchase_date IS NULL ORDER BY id')
+      .all() as { id: number }[];
+    if (undated.length) {
+      // Ids only: item names are free text and do not belong in the server log.
+      console.warn(
+        `Purchase date filled in for ${undated.length} item(s); please check them on /items: ids ` +
+          undated.map((item) => item.id).join(', '),
+      );
+    }
+    db.exec(`
+      DELETE FROM journal_entries WHERE kind = 'investment';
+      CREATE TABLE journal_entries_new (
+        id INTEGER PRIMARY KEY,
+        date TEXT NOT NULL,
+        title TEXT NOT NULL,
+        cost_rappen INTEGER CHECK (cost_rappen >= 0),
+        contractor TEXT,
+        notes TEXT,
+        item_id INTEGER REFERENCES items (id) ON DELETE SET NULL,
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL
+      );
+      INSERT INTO journal_entries_new
+        SELECT id, date, title, cost_rappen, contractor, notes, item_id, created_at, updated_at
+        FROM journal_entries;
+      DROP TABLE journal_entries;
+      ALTER TABLE journal_entries_new RENAME TO journal_entries;
+      CREATE INDEX journal_entries_date ON journal_entries (date);
+      CREATE INDEX journal_entries_item ON journal_entries (item_id);
+
+      CREATE TABLE items_new (
+        id INTEGER PRIMARY KEY,
+        name TEXT NOT NULL,
+        category TEXT CHECK (category IN ('appliance', 'building-part')),
+        purchase_date TEXT NOT NULL,
+        cost_rappen INTEGER CHECK (cost_rappen >= 0),
+        warranty_expires TEXT,
+        manufacturer TEXT,
+        model TEXT,
+        serial_number TEXT,
+        seller TEXT,
+        warranty_notified_at TEXT,
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL
+      );
+      INSERT INTO items_new
+        SELECT id, name, category,
+          coalesce(purchase_date, CASE
+            WHEN warranty_expires < substr(created_at, 1, 10) THEN warranty_expires
+            ELSE substr(created_at, 1, 10)
+          END),
+          cost_rappen,
+          warranty_expires, manufacturer, model, serial_number, seller, warranty_notified_at,
+          created_at, updated_at
+        FROM items;
+      DROP TABLE items;
+      ALTER TABLE items_new RENAME TO items;
+      CREATE INDEX items_warranty_pending ON items (warranty_expires)
+        WHERE warranty_notified_at IS NULL;`);
+  },
 ];
 
 export const DEFAULT_DB_PATH = 'data/domusmea.db';
@@ -158,19 +227,36 @@ export function openDatabase(path: string): DatabaseSync {
   return db;
 }
 
-function migrate(db: DatabaseSync): void {
+/**
+ * Applies the migrations up to `target` (default: all). Foreign keys are off during a step so a
+ * table can be rebuilt without `DROP TABLE` firing `ON DELETE` actions; they are checked before
+ * the step commits (SQLite's procedure for schema changes).
+ */
+export function migrate(db: DatabaseSync, target = MIGRATIONS.length): void {
   const { user_version: version } = db.prepare('PRAGMA user_version').get() as {
     user_version: number;
   };
-  for (let next = version; next < MIGRATIONS.length; next++) {
+  for (let next = version; next < target; next++) {
+    const migration = MIGRATIONS[next];
+    // Has no effect inside a transaction, so it is switched outside BEGIN … COMMIT.
+    db.exec('PRAGMA foreign_keys = OFF');
     db.exec('BEGIN');
     try {
-      db.exec(MIGRATIONS[next]);
+      if (typeof migration === 'string') {
+        db.exec(migration);
+      } else {
+        migration(db);
+      }
+      if (db.prepare('PRAGMA foreign_key_check').all().length) {
+        throw new Error(`Migration ${next + 1} leaves rows with broken foreign keys.`);
+      }
       db.exec(`PRAGMA user_version = ${next + 1}`);
       db.exec('COMMIT');
     } catch (error) {
       db.exec('ROLLBACK');
       throw error;
+    } finally {
+      db.exec('PRAGMA foreign_keys = ON');
     }
   }
 }

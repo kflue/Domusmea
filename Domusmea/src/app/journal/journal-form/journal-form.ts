@@ -4,8 +4,6 @@ import { form, FormField, maxLength, submit, validate } from '@angular/forms/sig
 import { Router, RouterLink } from '@angular/router';
 import { DEFAULT_TIME_ZONE, todayIn } from '../../../shared/format';
 import {
-  JOURNAL_KIND_LABELS,
-  JOURNAL_KINDS,
   JOURNAL_NOTES_MAX_LENGTH,
   JOURNAL_TEXT_MAX_LENGTH,
   JournalEntry,
@@ -16,12 +14,7 @@ import { FieldErrors } from '../../shared/field-errors';
 import { JournalApi } from '../journal-api';
 import { newJournalForm, toFormModel, toJournalEntryInput } from './journal-form-model';
 
-const KIND_HINTS = {
-  repair: 'Keeps the house in shape, e.g. fixing, servicing, replacing like for like.',
-  investment: 'Adds value, e.g. an extension, solar panels, a better heating system.',
-};
-
-/** Create (`/journal/new`) or edit (`/journal/:id`) a journal entry. */
+/** Create (`/journal/new`) or edit (`/journal/:id`) a repair or maintenance job. */
 @Component({
   selector: 'app-journal-form',
   imports: [FormField, RouterLink, FieldErrors],
@@ -34,12 +27,6 @@ export class JournalForm {
 
   /** Route parameter; absent when creating. */
   readonly id = input<string>();
-
-  protected readonly kinds = JOURNAL_KINDS.map((value) => ({
-    value,
-    label: JOURNAL_KIND_LABELS[value],
-    hint: KIND_HINTS[value],
-  }));
 
   protected readonly existing = httpResource<JournalEntry>(() => {
     const id = this.id();
@@ -108,8 +95,8 @@ export class JournalForm {
       } catch (error) {
         this.saveError.set(
           error instanceof HttpErrorResponse && error.status === 400
-            ? 'The entry was rejected by the server. Please check the entries.'
-            : 'The entry could not be saved. Please try again.',
+            ? 'The repair was rejected by the server. Please check the entries.'
+            : 'The repair could not be saved. Please try again.',
         );
       }
     });

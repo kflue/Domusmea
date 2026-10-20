@@ -6,7 +6,6 @@ import { JournalApi } from './journal-api';
 
 const input: JournalEntryInput = {
   date: '2026-10-01',
-  kind: 'repair',
   title: 'Tap fixed',
   costRappen: null,
   contractor: null,
