@@ -5,8 +5,7 @@ describe('journal form model conversion', () => {
   const entry: JournalEntry = {
     id: 3,
     date: '2026-09-01',
-    kind: 'investment',
-    title: 'Solar panels',
+    title: 'Roof tiles replaced',
     costRappen: 2450000,
     contractor: null,
     notes: 'Roof south side.\nSubsidy applied for.',
@@ -28,7 +27,6 @@ describe('journal form model conversion', () => {
     const form = { ...newJournalForm('2026-10-14'), title: ' Fixed tap ', notes: ' \n ' };
     expect(toJournalEntryInput(form)).toEqual({
       date: '2026-10-14',
-      kind: 'repair',
       title: 'Fixed tap',
       costRappen: null,
       contractor: null,

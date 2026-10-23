@@ -11,6 +11,8 @@ export interface OpexFigures {
   currentMonthlyRappen: number;
   /** Cost per calendar month; a month without a key is not covered by the source (a gap, R3). */
   monthly: Readonly<Record<string, number>>;
+  /** Remarks shown under the tile, e.g. `2 repairs without cost`. */
+  notes?: string[];
 }
 
 /** An opex source's figures with the name shown in the legend, the KPI and the table. */

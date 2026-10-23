@@ -37,7 +37,11 @@ describe('items router', () => {
     });
 
   it('creates an item from a minimal body and lists it', async () => {
-    const created = await send('POST', '', { name: '  Roof  ', manufacturer: '' });
+    const created = await send('POST', '', {
+      name: '  Roof  ',
+      purchaseDate: '2026-05-01',
+      manufacturer: '',
+    });
     expect(created.status).toBe(201);
     expect(await created.json()).toMatchObject({ id: 1, name: 'Roof', manufacturer: null });
 
@@ -60,7 +64,7 @@ describe('items router', () => {
     const body = await response.json();
     expect(body.error).toBe('invalid');
     expect(Object.keys(body.fields)).toEqual(
-      expect.arrayContaining(['name', 'costRappen', 'warrantyExpires', 'category']),
+      expect.arrayContaining(['name', 'purchaseDate', 'costRappen', 'warrantyExpires', 'category']),
     );
   });
 
@@ -93,14 +97,15 @@ describe('items router', () => {
   });
 
   it('updates and deletes an item, with 404 for unknown ids', async () => {
-    await send('POST', '', { name: 'Oven' });
+    const oven = { name: 'Oven', purchaseDate: '2026-05-01' };
+    await send('POST', '', oven);
 
-    const updated = await send('PUT', '/1', { name: 'Oven', costRappen: 99900 });
+    const updated = await send('PUT', '/1', { ...oven, costRappen: 99900 });
     expect(await updated.json()).toMatchObject({ costRappen: 99900 });
 
     expect((await send('DELETE', '/1')).status).toBe(204);
     expect((await fetch(`${baseUrl}/1`)).status).toBe(404);
-    expect((await send('PUT', '/1', { name: 'Oven' })).status).toBe(404);
+    expect((await send('PUT', '/1', oven)).status).toBe(404);
     expect((await fetch(`${baseUrl}/abc`)).status).toBe(404);
   });
 });

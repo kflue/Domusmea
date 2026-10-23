@@ -7,7 +7,7 @@ import { testClock } from './test-clock';
 const emptyInput: ItemInput = {
   name: 'Dishwasher',
   category: null,
-  purchaseDate: null,
+  purchaseDate: '2026-01-15',
   costRappen: null,
   warrantyExpires: null,
   manufacturer: null,

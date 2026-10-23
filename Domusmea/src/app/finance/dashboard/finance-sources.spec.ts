@@ -2,11 +2,13 @@ import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 import { OpexFigures } from '../../../shared/finance-totals';
+import { Item } from '../../../shared/item';
 import { JournalEntry } from '../../../shared/journal';
 import { Subscription } from '../../../shared/subscription';
 import { UtilityEntry } from '../../../shared/utility';
-import { subscriptionsFinanceSource } from '../../subscriptions/subscriptions.finance';
+import { itemsFinanceSource } from '../../items/items.finance';
 import { journalFinanceSource } from '../../journal/journal.finance';
+import { subscriptionsFinanceSource } from '../../subscriptions/subscriptions.finance';
 import { utilitiesFinanceSource } from '../../utilities/utilities.finance';
 import { FINANCE_SOURCES, provideFinanceSource } from './finance-sources';
 
@@ -21,6 +23,7 @@ describe('finance sources', () => {
         provideFinanceSource(subscriptionsFinanceSource),
         provideFinanceSource(utilitiesFinanceSource),
         provideFinanceSource(journalFinanceSource),
+        provideFinanceSource(itemsFinanceSource),
       ],
     });
     http = TestBed.inject(HttpTestingController);
@@ -36,7 +39,8 @@ describe('finance sources', () => {
     expect(sources.map((s) => [s.id, s.kind, s.link])).toEqual([
       ['subscriptions', 'opex', '/subscriptions'],
       ['utilities', 'opex', '/utilities'],
-      ['journal', 'capex', '/journal'],
+      ['journal', 'opex', '/journal'],
+      ['items', 'capex', '/items'],
     ]);
     http.expectNone('/api/subscriptions');
   });
@@ -75,26 +79,40 @@ describe('finance sources', () => {
     expect(monthly).toEqual({ '2026-07': 2_000, '2026-08': 2_000, '2026-09': 2_000 });
   });
 
-  it('load the investments, as "Other" without permission to read the items', async () => {
+  it('load the repairs per month, future ones left out', async () => {
     const journal = TestBed.inject(FINANCE_SOURCES)[2];
     const figures = journal.load('2026-10-15');
     await settle();
-    const investment: Partial<JournalEntry> = {
-      date: '2027-03-01',
-      kind: 'investment',
-      costRappen: 900_000,
-      itemId: 4,
+    const repairs: Partial<JournalEntry>[] = [
+      { date: '2026-09-03', costRappen: 60_000 },
+      { date: '2026-11-01', costRappen: 1_000 },
+    ];
+    http.expectOne('/api/journal').flush(repairs);
+    expect(await figures).toEqual({
+      currentMonthlyRappen: 0,
+      monthly: { '2026-09': 60_000, '2026-10': 0 },
+      notes: [],
+    });
+  });
+
+  it('load the item purchases by year and category', async () => {
+    const items = TestBed.inject(FINANCE_SOURCES)[3];
+    const figures = items.load('2026-10-15');
+    await settle();
+    const dishwasher: Partial<Item> = {
+      category: 'appliance',
+      purchaseDate: '2027-04-01',
+      costRappen: 150_000,
     };
-    http.expectOne('/api/journal').flush([investment]);
-    http.expectNone('/api/items');
+    http.expectOne('/api/items').flush({ today: '2026-10-15', items: [dishwasher] });
     expect(await figures).toEqual({
       years: [
         {
           year: '2027',
-          category: 'other',
-          categoryLabel: 'Other',
+          category: 'appliance',
+          categoryLabel: 'Appliance',
           spentRappen: 0,
-          plannedRappen: 900_000,
+          plannedRappen: 150_000,
         },
       ],
       notes: [],

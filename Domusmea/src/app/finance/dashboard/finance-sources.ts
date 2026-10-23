@@ -28,7 +28,7 @@ export interface OpexSource extends FinanceSourceBase {
 
 /**
  * Investments (capital expenditure). A source may report several categories (R6); a new capex
- * category is a new category within a source, or a new source for data outside the journal.
+ * category is a new category within a source, or a new source for data that are not items.
  */
 export interface CapexSource extends FinanceSourceBase {
   kind: 'capex';

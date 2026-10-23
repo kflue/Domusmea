@@ -5,7 +5,7 @@ interface ItemRow {
   id: number;
   name: string;
   category: ItemCategory | null;
-  purchase_date: string | null;
+  purchase_date: string;
   cost_rappen: number | null;
   warranty_expires: string | null;
   manufacturer: string | null;

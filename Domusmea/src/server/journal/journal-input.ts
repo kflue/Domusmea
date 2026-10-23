@@ -1,7 +1,6 @@
 import { z } from 'zod';
 import { optionalMultiLine, optionalText, singleLine } from '../text-validation';
 import {
-  JOURNAL_KINDS,
   JOURNAL_NOTES_MAX_LENGTH,
   JOURNAL_TEXT_MAX_LENGTH,
   JournalEntryInput,
@@ -10,7 +9,6 @@ import {
 /** Validates the body of `POST /api/journal` and `PUT /api/journal/:id`. Unknown fields are rejected. */
 export const journalEntryInputSchema = z.strictObject({
   date: z.iso.date(),
-  kind: z.enum(JOURNAL_KINDS),
   title: singleLine(JOURNAL_TEXT_MAX_LENGTH).min(1),
   costRappen: z
     .number()

@@ -2,11 +2,11 @@ import { DOCUMENT } from '@angular/common';
 import { afterNextRender, Component, computed, inject, Injector, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { formatChf, formatDate } from '../../../shared/format';
-import { JOURNAL_KIND_LABELS, JOURNAL_KINDS, JournalEntry } from '../../../shared/journal';
+import { JournalEntry } from '../../../shared/journal';
 import { ConfirmDelete } from '../../shared/confirm-delete';
 import { JournalApi } from '../journal-api';
 
-/** Journal of repairs and investments, filterable by year, with totals per kind (`/journal`). */
+/** Repairs & Maintenance (`/journal`): the repairs, filterable by year, with their total. */
 @Component({
   selector: 'app-journal-list',
   imports: [RouterLink, ConfirmDelete],
@@ -19,7 +19,6 @@ export class JournalList {
 
   protected readonly list = this.api.list;
   private readonly entries = computed(() => (this.list.hasValue() ? this.list.value() : []));
-  protected readonly kindLabels = JOURNAL_KIND_LABELS;
   protected readonly formatChf = formatChf;
   protected readonly formatDate = formatDate;
 
@@ -40,19 +39,10 @@ export class JournalList {
       : this.entries();
   });
 
-  /** Cost of the shown entries per kind and in total, formatted. */
-  protected readonly totals = computed(() => {
-    const sum = (entries: JournalEntry[]) =>
-      formatChf(entries.reduce((total, entry) => total + (entry.costRappen ?? 0), 0));
-    const shown = this.shown();
-    return {
-      kinds: JOURNAL_KINDS.map((kind) => ({
-        label: JOURNAL_KIND_LABELS[kind],
-        total: sum(shown.filter((entry) => entry.kind === kind)),
-      })),
-      all: sum(shown),
-    };
-  });
+  /** Cost of the shown repairs, formatted. */
+  protected readonly total = computed(() =>
+    formatChf(this.shown().reduce((total, entry) => total + (entry.costRappen ?? 0), 0)),
+  );
 
   protected readonly deleteError = signal('');
 

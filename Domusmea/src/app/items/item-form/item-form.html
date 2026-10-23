@@ -1,6 +1,21 @@
 <section class="mx-auto max-w-2xl">
   <h1 class="mb-6 text-2xl font-semibold">{{ isEdit() ? 'Edit item' : 'New item' }}</h1>
 
+  @if (lifetimeCost(); as cost) {
+    <p class="mb-6 text-gray-700">
+      @if (cost.repairs === 0) {
+        No repairs recorded for this item.
+      } @else {
+        <a routerLink="/journal" class="text-blue-700 underline">Repairs</a>:
+        {{ cost.repairCost }} in {{ cost.repairs }} {{ cost.repairs === 1 ? 'entry' : 'entries' }}.
+        @if (cost.total) {
+          Cost over its life, purchase included: <strong>{{ cost.total }}</strong
+          >.
+        }
+      }
+    </p>
+  }
+
   @if (existing.error()) {
     <p role="alert" class="rounded border border-red-300 bg-red-50 p-3 text-red-800">
       This item could not be loaded. It may have been deleted.
@@ -36,8 +51,21 @@
 
       <div class="grid gap-5 sm:grid-cols-2">
         <div>
-          <label for="purchaseDate" class="block font-medium">Purchase date</label>
-          <input id="purchaseDate" type="date" class="field" [formField]="itemForm.purchaseDate" />
+          <label for="purchaseDate" class="block font-medium">
+            Purchase date <span aria-hidden="true">*</span>
+          </label>
+          <input
+            id="purchaseDate"
+            type="date"
+            class="field"
+            aria-required="true"
+            aria-describedby="purchaseDate-errors"
+            [attr.aria-invalid]="
+              itemForm.purchaseDate().touched() && itemForm.purchaseDate().invalid()
+            "
+            [formField]="itemForm.purchaseDate"
+          />
+          <app-field-errors errorId="purchaseDate-errors" [field]="itemForm.purchaseDate()" />
         </div>
         <div>
           <label for="cost" class="block font-medium">Cost (CHF)</label>

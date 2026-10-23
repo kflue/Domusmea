@@ -9,7 +9,7 @@ import { JournalEntryInput } from '../../shared/journal';
 const UNKNOWN_ITEM = { error: 'invalid', fields: { itemId: ['Unknown item'] } };
 
 /**
- * REST API for the journal of repairs and investments, mounted at `/api/journal`. `repository` is
+ * REST API for the journal of repairs and maintenance, mounted at `/api/journal`. `repository` is
  * resolved per request so the database is only opened when the API is used.
  */
 export function createJournalRouter(repository: () => JournalRepository): Router {

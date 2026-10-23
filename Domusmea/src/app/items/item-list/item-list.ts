@@ -73,7 +73,7 @@ function toRow(item: Item, today: string): ItemRow {
   return {
     item,
     category: item.category ? ITEM_CATEGORY_LABELS[item.category] : '–',
-    purchased: item.purchaseDate ? formatDate(item.purchaseDate) : '–',
+    purchased: formatDate(item.purchaseDate),
     cost: item.costRappen === null ? '–' : formatChf(item.costRappen),
     warranty: item.warrantyExpires ? formatDate(item.warrantyExpires) : '–',
     warrantyStatus: warrantyStatus(item.warrantyExpires, today),

@@ -2,7 +2,7 @@
 
 Domusmea is a single Angular 22 application with server-side rendering. Its Express server
 (`Domusmea/src/server.ts`) is also the REST API and runs the background jobs. Data lives in one SQLite
-file.
+file; its schema is in [data-model.md](data-model.md).
 
 ```
 Browser ──HTTP──▶ Express (src/server.ts)
@@ -12,7 +12,7 @@ Browser ──HTTP──▶ Express (src/server.ts)
                    │   ├─ session + permission check (src/server/auth/access-control.ts)
                    │   ├─ /account        ──▶ src/server/auth/  (sign-ins, password, sign out)
                    │   ├─ /items          ──▶ src/server/items/ ──▶ SQLite (src/server/db.ts)
-                   │   ├─ /journal        ──▶ src/server/journal/ ──▶ SQLite (repairs, investments)
+                   │   ├─ /journal        ──▶ src/server/journal/ ──▶ SQLite (repairs)
                    │   ├─ /subscriptions  ──▶ src/server/subscriptions/ ──▶ SQLite (with price history)
                    │   ├─ /utilities      ──▶ src/server/utilities/ ──▶ SQLite (utility bills)
                    │   └─ /settings/email ──▶ src/server/email/ ──▶ SQLite, SMTP (test email)
@@ -86,5 +86,6 @@ reset with `npm run reset-login` (after `npm run build`), which brings back `adm
 | [0014](adr/0014-investments-on-finance-dashboard.md)   | Investments by year: planned = future-dated, category of the linked item  |
 | [0015](adr/0015-navigation-groups.md)                  | Side navigation grouped into capex and opex, Finance on top               |
 | [0016](adr/0016-subscriptions-area.md)                 | Subscriptions at `/subscriptions` with year totals; old URLs redirect     |
+| [0017](adr/0017-repairs-as-running-cost.md)            | Repairs are opex per month; capex comes only from item purchases          |
 
 New decisions get the next number; superseded ADRs stay and are marked as such.

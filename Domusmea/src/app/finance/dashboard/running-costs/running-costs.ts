@@ -1,4 +1,4 @@
-import { Component, computed, inject, input, resource } from '@angular/core';
+import { Component, computed, input, resource } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { lastMonths, mrcSummary, OpexCategory, opexChart } from '../../../../shared/finance-totals';
 import { formatChf, formatMonth, formatShare } from '../../../../shared/format';
@@ -36,6 +36,10 @@ export class RunningCosts {
     this.results().flatMap(({ source, figures }): OpexCategory[] =>
       figures ? [{ id: source.id, label: source.label, figures }] : [],
     ),
+  );
+  /** Remarks of the sources, e.g. `2 repairs without cost`. */
+  protected readonly notes = computed(() =>
+    this.results().flatMap(({ figures }) => figures?.notes ?? []),
   );
   /** Sources that could not be loaded, each shown with an inline error (R8). */
   protected readonly failed = computed(() =>

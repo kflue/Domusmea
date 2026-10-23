@@ -1,12 +1,12 @@
 <section class="mx-auto max-w-2xl">
   <h1 class="mb-6 text-2xl font-semibold">
-    {{ isEdit() ? 'Edit journal entry' : 'New journal entry' }}
+    {{ isEdit() ? 'Edit repair' : 'New repair' }}
   </h1>
 
   @if (existing.error()) {
     <p role="alert" class="rounded border border-red-300 bg-red-50 p-3 text-red-800">
-      This entry could not be loaded. It may have been deleted.
-      <a routerLink="/journal" class="underline">Back to the journal</a>
+      This repair could not be loaded. It may have been deleted.
+      <a routerLink="/journal" class="underline">Back to Repairs &amp; Maintenance</a>
     </p>
   } @else if (isEdit() && existing.isLoading()) {
     <p aria-live="polite">Loading…</p>
@@ -40,29 +40,6 @@
           <app-field-errors errorId="cost-errors" [field]="entryForm.cost()" />
         </div>
       </div>
-
-      <fieldset>
-        <legend class="font-medium">Kind of work</legend>
-        <div class="mt-1 grid gap-2">
-          @for (kind of kinds; track kind.value) {
-            <label class="flex items-start gap-2">
-              <input
-                type="radio"
-                class="mt-1.5"
-                [value]="kind.value"
-                [attr.aria-describedby]="'kind-hint-' + kind.value"
-                [formField]="entryForm.kind"
-              />
-              <span>
-                {{ kind.label }}
-                <span [id]="'kind-hint-' + kind.value" class="block text-sm text-gray-600">
-                  {{ kind.hint }}
-                </span>
-              </span>
-            </label>
-          }
-        </div>
-      </fieldset>
 
       <div>
         <label for="title" class="block font-medium">

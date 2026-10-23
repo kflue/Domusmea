@@ -27,10 +27,11 @@ describe('form model conversion', () => {
   });
 
   it('turns empty and blank fields into null', () => {
-    expect(toItemInput({ ...EMPTY_ITEM_FORM, name: ' Roof ', seller: '  ' })).toEqual({
+    const form = { ...EMPTY_ITEM_FORM, name: ' Roof ', purchaseDate: '2010-06-01', seller: '  ' };
+    expect(toItemInput(form)).toEqual({
       name: 'Roof',
       category: null,
-      purchaseDate: null,
+      purchaseDate: '2010-06-01',
       costRappen: null,
       warrantyExpires: null,
       manufacturer: null,

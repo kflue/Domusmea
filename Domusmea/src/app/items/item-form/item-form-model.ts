@@ -31,7 +31,7 @@ export function toFormModel(item: Item): ItemFormModel {
   return {
     name: item.name,
     category: item.category ?? '',
-    purchaseDate: item.purchaseDate ?? '',
+    purchaseDate: item.purchaseDate,
     cost: item.costRappen === null ? '' : rappenToChfText(item.costRappen),
     warrantyExpires: item.warrantyExpires ?? '',
     manufacturer: item.manufacturer ?? '',
@@ -47,7 +47,7 @@ export function toItemInput(form: ItemFormModel): ItemInput {
   return {
     name: form.name.trim(),
     category: form.category || null,
-    purchaseDate: form.purchaseDate || null,
+    purchaseDate: form.purchaseDate,
     costRappen: parseChf(form.cost) ?? null,
     warrantyExpires: form.warrantyExpires || null,
     manufacturer: text(form.manufacturer),

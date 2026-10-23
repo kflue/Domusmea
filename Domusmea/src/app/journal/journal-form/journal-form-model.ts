@@ -1,10 +1,9 @@
-import { JournalEntry, JournalEntryInput, JournalKind } from '../../../shared/journal';
+import { JournalEntry, JournalEntryInput } from '../../../shared/journal';
 import { parseChf, rappenToChfText } from '../../shared/chf-input';
 
 /** Form state: strings only, as Signal Forms binds inputs to non-null values. */
 export interface JournalFormModel {
   date: string;
-  kind: JournalKind;
   title: string;
   /** Cost in CHF as typed, e.g. `1'299.50`. */
   cost: string;
@@ -14,11 +13,10 @@ export interface JournalFormModel {
   itemId: string;
 }
 
-/** A new entry for work done on `today` (`YYYY-MM-DD`). */
+/** A new repair done on `today` (`YYYY-MM-DD`). */
 export function newJournalForm(today: string): JournalFormModel {
   return {
     date: today,
-    kind: 'repair',
     title: '',
     cost: '',
     contractor: '',
@@ -30,7 +28,6 @@ export function newJournalForm(today: string): JournalFormModel {
 export function toFormModel(entry: JournalEntry): JournalFormModel {
   return {
     date: entry.date,
-    kind: entry.kind,
     title: entry.title,
     cost: entry.costRappen === null ? '' : rappenToChfText(entry.costRappen),
     contractor: entry.contractor ?? '',
@@ -44,7 +41,6 @@ export function toJournalEntryInput(form: JournalFormModel): JournalEntryInput {
   const text = (value: string) => value.trim() || null;
   return {
     date: form.date,
-    kind: form.kind,
     title: form.title.trim(),
     costRappen: parseChf(form.cost) ?? null,
     contractor: text(form.contractor),

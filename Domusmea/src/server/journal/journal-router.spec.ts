@@ -18,7 +18,7 @@ describe('journal router', () => {
     new ItemRepository(db, clock).create({
       name: 'Boiler',
       category: 'appliance',
-      purchaseDate: null,
+      purchaseDate: '2026-01-15',
       costRappen: null,
       warrantyExpires: null,
       manufacturer: null,
@@ -47,7 +47,7 @@ describe('journal router', () => {
       body: typeof body === 'string' ? body : JSON.stringify(body),
     });
 
-  const minimal = { date: '2026-09-01', kind: 'repair', title: 'Serviced boiler' };
+  const minimal = { date: '2026-09-01', title: 'Serviced boiler' };
 
   it('creates an entry from a minimal body and lists it', async () => {
     const created = await send('POST', '', { ...minimal, title: '  Serviced boiler ', notes: '' });
@@ -79,7 +79,6 @@ describe('journal router', () => {
   it('rejects invalid input with field errors', async () => {
     const response = await send('POST', '', {
       date: '2026-02-30',
-      kind: 'gift',
       title: '',
       costRappen: -1,
       contractor: 'Meier\nAG',
@@ -91,16 +90,13 @@ describe('journal router', () => {
     const body = await response.json();
     expect(body.error).toBe('invalid');
     expect(Object.keys(body.fields)).toEqual(
-      expect.arrayContaining([
-        'date',
-        'kind',
-        'title',
-        'costRappen',
-        'contractor',
-        'notes',
-        'itemId',
-      ]),
+      expect.arrayContaining(['date', 'title', 'costRappen', 'contractor', 'notes', 'itemId']),
     );
+  });
+
+  it('rejects the former kind field (ADR 0017)', async () => {
+    const response = await send('POST', '', { ...minimal, kind: 'investment' });
+    expect(response.status).toBe(400);
   });
 
   it('rejects an unknown item', async () => {
@@ -121,8 +117,8 @@ describe('journal router', () => {
   it('updates and deletes an entry, with 404 for unknown ids', async () => {
     await send('POST', '', minimal);
 
-    const updated = await send('PUT', '/1', { ...minimal, kind: 'investment', costRappen: 99900 });
-    expect(await updated.json()).toMatchObject({ kind: 'investment', costRappen: 99900 });
+    const updated = await send('PUT', '/1', { ...minimal, costRappen: 99900 });
+    expect(await updated.json()).toMatchObject({ costRappen: 99900 });
     expect((await fetch(`${baseUrl}/1`)).status).toBe(200);
 
     expect((await send('DELETE', '/1')).status).toBe(204);

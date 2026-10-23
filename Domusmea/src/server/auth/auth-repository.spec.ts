@@ -71,7 +71,9 @@ describe('AuthRepository', () => {
   });
 
   it('resets to the default credentials without touching other data', async () => {
-    db.exec(`INSERT INTO items (name, created_at, updated_at) VALUES ('Roof', 'x', 'x')`);
+    db.exec(
+      `INSERT INTO items (name, purchase_date, created_at, updated_at) VALUES ('Roof', '2010-06-01', 'x', 'x')`,
+    );
     repository.completeSetup(1, 'anna', 'scrypt$new');
     const token = repository.createSession(1);
 
