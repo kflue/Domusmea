@@ -101,7 +101,7 @@ Workflow rules).
 ## Dev environment
 
 - GitHub Codespaces devcontainer (`.devcontainer/`): Node 24, Java 21 (for the SonarQube MCP server),
-  Angular CLI installed globally. Forwarded ports: 4200 (dev server), 4000 (SSR server).
+  Docker (docker-in-docker, with Compose), Angular CLI installed globally. Forwarded ports: 4200 (dev server), 4000 (SSR server).
 
 ## Claude Code tooling (project-scoped)
 

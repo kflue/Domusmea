@@ -17,7 +17,9 @@
     "ghcr.io/devcontainers/features/github-cli:1": {},
     "ghcr.io/anthropics/devcontainer-features/claude-code:1": {},
     // Java 21 for the SonarQube MCP server used by Claude Code.
-    "ghcr.io/devcontainers/features/java:1": { "version": "21", "jdkDistro": "ms" }
+    "ghcr.io/devcontainers/features/java:1": { "version": "21", "jdkDistro": "ms" },
+    // Docker CLI, Compose and a daemon inside the container (runs privileged).
+    "ghcr.io/devcontainers/features/docker-in-docker:2": {}
   },
 
   // Keep Claude Code's login and settings across container rebuilds.
